@@ -1,0 +1,87 @@
+name: Create Dev Lambda Layer
+
+on:
+  workflow_call:
+    outputs:
+      lambdalayeramd64:
+        description: "Created x86_64 lambda layer arn"
+        value: ${{ jobs.create-lambda-layer.outputs.lambdalayeramd64 }}
+      lambdalayerarm64:
+        description: "Created lambda layer arn"
+        value: ${{ jobs.create-lambda-layer.outputs.lambdalayerarm64 }}
+    inputs:
+      LANGUAGE:
+        required: true
+        type: string
+      ARTIFACT_ARCHIVE_BASE_NAME:
+        required: true
+        type: string
+      ARTIFACT_NAME:
+        required: true
+        type: string
+
+jobs:
+  create-lambda-layer:
+    name: Create Dev Lambda Layer
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        aws_region: [ eu-central-1 ]
+    env:
+      LANGUAGE: ${{ inputs.LANGUAGE }}
+      LAYER_NAME: ${{ github.head_ref }}-${{ inputs.LANGUAGE }}-${{ matrix.architecture }}
+      ARCHITECTURE: ${{ matrix.architecture }}
+      ARTIFACT_ARCHIVE_BASE_NAME: ${{ inputs.ARTIFACT_ARCHIVE_BASE_NAME }}
+      ARTIFACT_NAME: ${{ inputs.ARTIFACT_NAME }}
+      BUCKET_NAME: ${{ github.head_ref }}-${{ inputs.LANGUAGE }}-${{ matrix.architecture }}-${{ github.run_id }}
+      BUCKET_KEY: layer-${{ matrix.architecture }}-${{ matrix.aws_region }}-.zip
+      DIRECTORY: ${{ inputs.LANGUAGE }}
+      REGION: ${{ matrix.aws_region }}
+    outputs:
+      lambdalayeramd64: ${{ steps.get-latest-lambda-layer-arn-amd64.outputs.layeramd64 }}
+      lambdalayerarm64: ${{ steps.get-latest-lambda-layer-arn-arm64.outputs.layerarm64 }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: ~/artifact
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        env:
+          AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
+        with:
+          role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
+      - name: Install AWS CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install awscli
+      - name: Create S3 Bucket
+        run: make create-bucket
+      - name: Copy Collector and SDK archive to S3 bucket
+        run: make copy-content-to-bucket
+      - name: Create Lambda Layer
+        run: make create-dev-lambda-layer
+      - name: Get latest Lambda Layer arn amd64
+        if: ${{ matrix.architecture == 'amd64' }}
+        id: get-latest-lambda-layer-arn-amd64
+        run: echo "layeramd64=$(make get-dev-latest-lambda-layer-arn)" >> $GITHUB_OUTPUT
+      - name: Get latest Lambda Layer arn arm64
+        if: ${{ matrix.architecture == 'arm64' }}
+        id: get-latest-lambda-layer-arn-arm64
+        run: echo "layerarm64=$(make get-dev-latest-lambda-layer-arn)" >> $GITHUB_OUTPUT
+      - name: Clean s3
+        if: always()
+        run: make clean-s3

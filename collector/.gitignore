@@ -1,0 +1,6 @@
+# Ignore files from opentelemetry-lambda collector
+collector-config
+extensions
+
+# Ignore collector archive
+collector-layer.zip

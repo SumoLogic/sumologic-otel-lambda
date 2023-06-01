@@ -1,0 +1,16 @@
+{
+    "retryOn429": true,
+    "retryCount": 5,
+    "fallbackRetryDelay": "30s",
+    "replacementPatterns": [
+      {
+        "pattern": "^/",
+        "replacement": "{{BASEURL}}/"
+      }
+    ],
+    "ignorePatterns": [
+      {
+        "pattern": "^https://mikefarah.gitbook.io/yq"
+      }
+    ]
+  }

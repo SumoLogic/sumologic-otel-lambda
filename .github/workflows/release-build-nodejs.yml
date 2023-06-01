@@ -1,0 +1,118 @@
+name: Release Build - NodeJS
+
+on:
+  push:
+    tags:
+      - 'release-nodejs-v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build-release-artifacts:
+    uses: ./.github/workflows/build-artifacts.yml
+    with:
+      BUILD_COMMAND: make build-nodejs
+      LANGUAGE: nodejs
+      ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-nodejs
+      ARTIFACT_NAME: ${{ github.ref_name }}
+
+  create-release-lambda-layer:
+    needs: build-release-artifacts
+    uses: ./.github/workflows/publish-release-layer.yml
+    with:
+      ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-nodejs
+      ARTIFACT_NAME: ${{ github.ref_name }}
+      LANGUAGE: nodejs
+
+  create-release:
+    needs: create-release-lambda-layer
+    name: Create Release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Extract tag
+        id: extract_tag
+        run: echo "::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/release-nodejs-v})"
+      - name: Download amd64 layer artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.ref_name }}-nodejs-amd64-artifacts
+          path: artifacts/
+      - name: Download arm 64 layer artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.ref_name }}-nodejs-arm64-artifacts
+          path: artifacts/
+      - name: Download sample-app artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: sample-app-nodejs-amd64-artifacts
+          path: artifacts/
+      - name: Download amd64 Layer ARNs
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.ref_name }}-nodejs-amd64-layer-arns-artifact
+          path: amd64layerarns/
+      - name: Download arm64 Layer ARNs
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.ref_name }}-nodejs-arm64-layer-arns-artifact
+          path: arm64layerarns/
+      - uses: actions/setup-node@v3.6.0
+      - name: Install markdown-table-formatter
+        run: npm install markdown-table-formatter --save
+      - name: Create amd64 layers table
+        id: amd64layerslist
+        run: |
+          echo "### AMD64 Lambda Layers List" > amd64layerslist.md
+          echo "| Region | ARN |" >> amd64layerslist.md
+          echo "| --- | --- |" >> amd64layerslist.md
+          for file in amd64layerarns/*
+          do
+            cat $file >> amd64layerslist.md
+          done
+          ./node_modules/.bin/markdown-table-formatter -p 2 amd64layerslist.md
+          echo "AMD64_LAYERS<<EOF" >> "$GITHUB_ENV"
+          cat amd64layerslist.md >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+      - name: Create amd64 layers table
+        id: arm64layerslist
+        run: |
+          echo "### ARM64 Lambda Layers List" > arm64layerslist.md
+          echo "| Region | ARN |" >> arm64layerslist.md
+          echo "| --- | --- |" >> arm64layerslist.md
+          for file in arm64layerarns/*
+          do
+            cat $file >> arm64layerslist.md
+          done
+          ./node_modules/.bin/markdown-table-formatter -p 2 arm64layerslist.md
+          echo "ARM64_LAYERS<<EOF" >> "$GITHUB_ENV"
+          cat arm64layerslist.md >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+      - uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: true
+
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+
+          body: |
+            ## Sumo Logic OTel NodeJS AWS Lambda Layer version: ${{ steps.extract_tag.outputs.tag }}
+
+            ## Changelog
+            **TODO**
+
+            ## Lambda Function Layers:
+
+            ${{ env.AMD64_LAYERS }}
+
+            ${{ env.ARM64_LAYERS }}
+
+            ## Lambda Container dependencies:
+            
+            - [amd64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/${{ github.ref_name }}/opentelemetry-nodejs-amd64.zip)
+            - [arm64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/${{ github.ref_name }}/opentelemetry-nodejs-arm64.zip)
+
+          artifacts: "artifacts/opentelemetry-nodejs-amd64.zip,artifacts/opentelemetry-nodejs-arm64.zip,artifacts/nodejs-sample-app.zip"
+          artifactErrorsFailBuild: true
+          replacesArtifacts: true

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+export OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER="${_HANDLER}"
+export _HANDLER="io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper"
+
+# - Set the trace exporter
+
+if [[ -z "${OTEL_TRACES_EXPORTER}" ]]; then
+    export OTEL_TRACES_EXPORTER=otlp;
+fi
+
+# - Set the metrics exporter
+
+if [[ -z "${OTEL_METRICS_EXPORTER}" ]]; then
+    export OTEL_METRICS_EXPORTER=none;
+fi
+
+# - Set the logs exporter
+
+if [[ -z "${OTEL_LOGS_EXPORTER}" ]]; then
+    export OTEL_LOGS_EXPORTER=none;
+fi
+
+# - Set the service name
+if [[ -z "${OTEL_SERVICE_NAME}" ]]; then
+  export OTEL_SERVICE_NAME=${AWS_LAMBDA_FUNCTION_NAME};
+fi
+
+# - Set Lambda specific resource attributes
+export LAMBDA_RESOURCE_ATTRIBUTES="cloud.region=${AWS_REGION},cloud.provider=aws,faas.name=${AWS_LAMBDA_FUNCTION_NAME},faas.version=${AWS_LAMBDA_FUNCTION_VERSION}";
+
+if [[ -z "${OTEL_RESOURCE_ATTRIBUTES}" ]]; then
+    export OTEL_RESOURCE_ATTRIBUTES=${LAMBDA_RESOURCE_ATTRIBUTES};
+else
+    export OTEL_RESOURCE_ATTRIBUTES="${LAMBDA_RESOURCE_ATTRIBUTES},${OTEL_RESOURCE_ATTRIBUTES}";
+fi
+
+# - Set Lambda flush timeout
+export OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT=10000
+
+exec "$@"

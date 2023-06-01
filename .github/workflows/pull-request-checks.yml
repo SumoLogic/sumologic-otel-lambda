@@ -1,0 +1,115 @@
+name: PRs checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - 'release-java-v[0-9]+.[0-9]+.[0-9]+'
+      - 'release-nodejs-v[0-9]+.[0-9]+.[0-9]+'
+      - 'release-python-v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  docs-changed:
+    runs-on: ubuntu-22.04
+    outputs:
+      any_changed: ${{ steps.changed-files.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check if documentation related files changed
+        id: changed-files
+        uses: tj-actions/changed-files@v36
+        with:
+          files: |
+            **/*.md
+            ci/*
+            .github/*
+            **/Makefile
+            .*
+
+  markdownlint:
+    runs-on: ubuntu-22.04
+    needs: [docs-changed]
+    steps:
+      - uses: actions/checkout@v3
+      - name: install markdownlint
+        if: needs.docs-changed.outputs.any_changed == 'true'
+        run: npm install -g markdownlint-cli
+      - name: markdownlint check
+        if: needs.docs-changed.outputs.any_changed == 'true'
+        run: make markdown-lint
+
+  yamllint:
+    runs-on: ubuntu-22.04
+    needs: [docs-changed]
+    steps:
+      - uses: actions/checkout@v3
+      - name: install yamllint
+        if: needs.chart-changed.outputs.any_changed == 'true'
+        run: pip install yamllint
+      - name: yamllint
+        if: needs.chart-changed.outputs.any_changed == 'true'
+        run: make yaml-lint
+
+  markdown-link-check:
+    runs-on: ubuntu-22.04
+    needs: [docs-changed]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          config-file: '.markdown_link_check.json'
+          use-quiet-mode: yes
+          check-modified-files-only: yes
+          base-branch: ${{ github.base_ref }}
+
+  md-links-lint:
+    runs-on: ubuntu-22.04
+    needs: [docs-changed]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint markdown links
+        if: needs.docs-changed.outputs.any_changed == 'true'
+        run: |
+          make markdown-links-lint
+  markdown-table-formatter-check:
+    runs-on: ubuntu-22.04
+    needs: [docs-changed]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3.6.0
+        if: needs.docs-changed.outputs.any_changed == 'true'
+      - name: Install markdown-table-formatter
+        if: needs.docs-changed.outputs.any_changed == 'true'
+        run: npm install markdown-table-formatter --save
+      - name: Run markdown-table-formatter
+        if: needs.docs-changed.outputs.any_changed == 'true'
+        run: CMD=./node_modules/.bin/markdown-table-formatter make markdown-table-formatter-check
+
+  terraform-lint:
+    runs-on: ubuntu-22.04
+    name: Check terraform files
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Terraform fmt java
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: java/tests/deploy
+      - name: Terraform fmt nodejs
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: nodejs/tests/deploy
+      - name: Terraform fmt python
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: python/tests/deploy
+      - name: Terraform fmt utils/api-gw
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: utils/api-gw/api-gateway-proxy
+      - name: Terraform fmt utils/receiver-mock
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: utils/receiver-mock/deploy
