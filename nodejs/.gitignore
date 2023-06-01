@@ -1,0 +1,5 @@
+# Ignore files combine directory
+combine
+
+# Ignore nodejs sdk archive
+opentelemetry-nodejs.zip

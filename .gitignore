@@ -1,0 +1,37 @@
+# VisualStudioCode
+.vscode
+
+# JetBrains
+.idea
+
+# Collector build results
+collector/collector-config
+collector/extensions
+collector/collector-layer.zip
+
+# Java build restults
+java/combine
+java/opentelemetry-java-wrapper.zip
+
+# NodeJS build results
+nodejs/combine
+nodejs/opentelemetry-nodejs.zip
+
+# Python build results
+python/combine
+python/opentelemetry-python.zip
+
+# Ignore terraform
+**/deploy/.terraform/*
+**/deploy/.terraform.lock.hcl
+
+# Ignore sample apps
+**/sample-apps/sample_function
+**/sample-apps/function.zip
+**/sample.zip
+
+# Ignore aws sam
+**/.aws-sam
+
+# DS Store
+**/.DS_Store

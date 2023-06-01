@@ -1,0 +1,5 @@
+# Ignore files combine directory
+combine
+
+# Ignore Java SDK wrapper archive
+opentelemetry-java-wrapper.zip

@@ -1,0 +1,35 @@
+name: Pull Request Build - Java
+
+on:
+  pull_request:
+    paths:
+      - 'java/**'
+      - '.github/workflows/*-java.yml'
+      - '.github/workflows/tests.yml'
+      - '!java/**.md'
+      - '!java/sample-apps/template.yaml'
+
+jobs:
+  build-artifacts:
+    uses: ./.github/workflows/build-artifacts.yml
+    with:
+      BUILD_COMMAND: make build-java
+      LANGUAGE: java
+      ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-java-wrapper
+      ARTIFACT_NAME: ${{ github.head_ref }}
+
+  create-dev-lambda-layer:
+    needs: build-artifacts
+    uses: ./.github/workflows/publish-dev-layer.yml
+    with:
+      ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-java-wrapper
+      ARTIFACT_NAME: ${{ github.head_ref }}
+      LANGUAGE: java
+
+  run-tests:
+    needs: create-dev-lambda-layer
+    uses: ./.github/workflows/tests.yml
+    with:
+      LANGUAGE: java
+      LAYER_ARN_AMD64: ${{ needs.create-dev-lambda-layer.outputs.lambdalayeramd64 }}
+      LAYER_ARN_ARM64: ${{ needs.create-dev-lambda-layer.outputs.lambdalayerarm64 }}

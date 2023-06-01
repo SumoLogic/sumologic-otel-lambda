@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Sumo Logic Java Lambda layer sample app
+Parameters:
+  SumoHttpTracesSourceUrl:
+    Type: String
+    Description: Enter Sumo Logic Http Traces Source Url https://help.sumologic.com/docs/apm/traces/get-started-transaction-tracing/http-traces-source/
+Resources:
+  api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: api
+      TracingEnabled: false
+      OpenApiVersion: 3.0.2
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: io.opentelemetry.lambda.sampleapps.awssdk.AwsSdkRequestHandler::handleRequest
+      Runtime: java11
+      CodeUri: ./java-sample-app.jar
+      Description: Java sample application
+      MemorySize: 512
+      Timeout: 30
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambda_ReadOnlyAccess
+        - AmazonS3FullAccess
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-proxy-handler
+          SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL: !Ref SumoHttpTracesSourceUrl
+          OTEL_TRACES_SAMPLER: always_on
+          OTEL_RESOURCE_ATTRIBUTES: !Sub 'application=lambda-tests,cloud.account.id=${AWS::AccountId}'
+      Tracing: PassThrough
+      Layers:
+        - !FindInMap [RegionMap, !Ref "AWS::Region", layer]
+      Events:
+        getEndpoint:
+          Type: Api
+          Properties:
+            RestApiId: !Ref api
+            Path: /
+            Method: GET
+Outputs:
+  SampleAppApiEndpoint:
+    Description: "Sample App API endpoint"
+    Value: !Sub "https://${api}.execute-api.${AWS::Region}.amazonaws.com/api/"
+
+Mappings:
+  RegionMap:
+    ap-northeast-1:
+      layer: "arn:aws:lambda:ap-northeast-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    ap-northeast-2:
+      layer: "arn:aws:lambda:ap-northeast-2:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    ap-south-1:
+      layer: "arn:aws:lambda:ap-south-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    ap-southeast-1:
+      layer: "arn:aws:lambda:ap-southeast-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    ap-southeast-2:
+      layer: "arn:aws:lambda:ap-southeast-2:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    ca-central-1:
+      layer: "arn:aws:lambda:ca-central-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    eu-central-1:
+      layer: "arn:aws:lambda:eu-central-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    eu-north-1:
+      layer: "arn:aws:lambda:eu-north-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    eu-west-1:
+      layer: "arn:aws:lambda:eu-west-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    eu-west-2:
+      layer: "arn:aws:lambda:eu-west-2:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    eu-west-3:
+      layer: "arn:aws:lambda:eu-west-3:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    sa-east-1:
+      layer: "arn:aws:lambda:sa-east-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    us-east-1:
+      layer: "arn:aws:lambda:us-east-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    us-east-2:
+      layer: "arn:aws:lambda:us-east-2:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    us-west-1:
+      layer: "arn:aws:lambda:us-west-1:663229565520:layer:sumologic-otel-lambda-java-amd64:1"
+    us-west-2:
+      layer: "arn:aws:lambda:us-west-2:663229565520:layer:sumologic-otel-lambda-java-amd64:1"

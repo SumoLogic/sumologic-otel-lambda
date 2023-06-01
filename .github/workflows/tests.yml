@@ -1,0 +1,205 @@
+name: Tests
+
+on:
+  workflow_call:
+    inputs:
+      LANGUAGE:
+        required: true
+        type: string
+      LAYER_ARN_AMD64:
+        required: true
+        type: string
+      LAYER_ARN_ARM64:
+        required: true
+        type: string
+
+jobs:
+  deploy-receiver-mock:
+    name: Deploy receiver-mock
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        aws_region: [ eu-central-1 ]
+    outputs:
+      receivermockendpoint: ${{ steps.get-receiver-mock-endpoint.outputs.endpoint }}
+    env:
+      TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        env:
+          AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
+        with:
+          role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
+      - name: Cache terraform working directory
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TERRAFORM_DIRECTORY }}
+          key: ${{ inputs.LANGUAGE }}-${{ github.run_id }}
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Apply terraform
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_app_name: lambda-layers-${{ inputs.LANGUAGE }}
+      - name: Wait for task container to be ready
+        run: sleep 30
+      - name: Get receiver-mock endpoint
+        id: get-receiver-mock-endpoint
+        run: echo "endpoint=$(terraform output -raw loadbalancer_ip)" >> $GITHUB_OUTPUT
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_app_name: lambda-layers-${{ inputs.LANGUAGE }}
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-22.04
+    needs: deploy-receiver-mock
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        aws_region: [ eu-central-1 ]
+    env:
+      BUCKET_NAME: lambda-tests-terraform-state-bucket
+      BUCKET_KEY: ${{ matrix.architecture}}.${{ inputs.LANGUAGE }}/terraform_state.tfstate
+      LANGUAGE: ${{ inputs.LANGUAGE }}
+      TERRAFORM_DIRECTORY: ${{ inputs.LANGUAGE }}/tests/deploy
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Download sample-app artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: ~/artifact
+      - name: Select function package
+        run: |
+          if [[ "${{ env.LANGUAGE }}" == "java" ]]; then
+            echo "FUNCTION_PACKAGE=~/artifact/java-sample-app.jar" >> "$GITHUB_ENV"
+          elif [[ "${{ env.LANGUAGE }}" == "nodejs" ]]; then
+            echo "FUNCTION_PACKAGE=~/artifact/nodejs-sample-app.zip" >> "$GITHUB_ENV"
+          elif [[ "${{ env.LANGUAGE }}" == "python" ]]; then
+            echo "FUNCTION_PACKAGE=~/artifact/python-sample-app.zip" >> "$GITHUB_ENV"
+          fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        env:
+          AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
+        with:
+          role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
+      - name: Get Lambda Layer amd64 architecture value
+        if: ${{ matrix.architecture == 'amd64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=x86_64 | tee --append $GITHUB_ENV
+      - name: Get Lambda Layer arm64 architecture value
+        if: ${{ matrix.architecture == 'arm64' }}
+        run: echo LAMBDA_FUNCTION_ARCH=arm64 | tee --append $GITHUB_ENV
+      - name: Set Layer ARN
+        run: |
+          if [[ "${{ matrix.architecture }}" == "arm64" ]]; then
+            echo "LAYER_ARN=${{ inputs.LAYER_ARN_ARM64 }}" >>  "$GITHUB_ENV"
+          else
+            echo "LAYER_ARN=${{ inputs.LAYER_ARN_AMD64 }}" >>  "$GITHUB_ENV"
+          fi
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+      - name: Initialize terraform
+        run: |
+          terraform init \
+          --backend-config "bucket=${{ env.BUCKET_NAME }}" \
+          --backend-config "key=${{ env.BUCKET_KEY }}" \
+          --backend-config "region=${{ matrix.aws_region }}"
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Deploy lambda sample function
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_function_package: ${{ env.FUNCTION_PACKAGE }}
+          TF_VAR_collector_endpoint: ${{ needs.deploy-receiver-mock.outputs.receivermockendpoint }}
+          TF_VAR_layer_arn: ${{ env.LAYER_ARN }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+      - name: Get lambda function gateway url
+        id: lambda-function-url
+        run: echo "gwurl=$(terraform output -raw api-gateway-url)" >> $GITHUB_OUTPUT
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Get lambda function name
+        id: lambda-function-name
+        run: echo "functionname=$(terraform output -raw service-name)" >> $GITHUB_OUTPUT
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+      - name: Wait for api gw...
+        run: sleep 30
+      - name: Generate traffic
+        run: curl -sS ${{ steps.lambda-function-url.outputs.gwurl }}/%7Bproxy+%7D
+      - name: Wait for data to flow...
+        run: sleep 60
+      - name: Execute tests
+        run: |
+          export RECEIVER_ENDPOINT=${{ needs.deploy-receiver-mock.outputs.receivermockendpoint }}
+          export LAMBDA_FUNCTION_NAME=${{ steps.lambda-function-name.outputs.functionname }}
+          export AWS_ACCOUNT_ID=663229565520
+          cd tests/lambdalayer
+          go test -v -run TestSpans${{ env.LANGUAGE }}
+      - name: Cleanup AWS environment
+        if: success()
+        run: terraform destroy -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_function_package: ${{ env.FUNCTION_PACKAGE }}
+          TF_VAR_collector_endpoint: ${{ needs.deploy-receiver-mock.outputs.receivermockendpoint }}
+          TF_VAR_layer_arn: ${{ env.LAYER_ARN }}
+          TF_VAR_architecture: ${{ env.LAMBDA_FUNCTION_ARCH }}
+  destroy-receiver-mock:
+    name: Destroy receiver-mock
+    runs-on: ubuntu-22.04
+    needs: run-tests
+    if: always()
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        aws_region: [ eu-central-1 ]
+    env:
+      TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        env:
+          AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
+        with:
+          role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+      - name: Cache terraform working directory
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TERRAFORM_DIRECTORY }}
+          key: ${{ inputs.LANGUAGE }}-${{ github.run_id }}
+      - name: Destroy terraform
+        run: terraform destroy -auto-approve
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        env:
+          TF_VAR_app_name: lambda-layers-${{ inputs.LANGUAGE }}

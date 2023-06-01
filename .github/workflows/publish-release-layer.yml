@@ -1,0 +1,111 @@
+name: Create Public Lambda Layer
+
+on:
+  workflow_call:
+    inputs:
+      LANGUAGE:
+        required: true
+        type: string
+      ARTIFACT_ARCHIVE_BASE_NAME:
+        required: true
+        type: string
+      ARTIFACT_NAME:
+        required: true
+        type: string
+
+jobs:
+  create-public-lambda-layer:
+    name: Create Public Lambda Layer
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        aws_region: [ us-east-1, us-east-2, us-west-1, us-west-2, af-south-1, ap-east-1, ap-south-1, ap-northeast-3,
+                      ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-northeast-1, ca-central-1, eu-central-1,
+                      eu-west-1, eu-west-2, eu-south-1, eu-west-3, eu-north-1, me-south-1, sa-east-1 ]
+        exclude:
+          - aws_region: ap-northeast-2
+            architecture: arm64
+          - aws_region: af-south-1
+            architecture: arm64
+          - aws_region: ca-central-1
+            architecture: arm64
+          - aws_region: eu-north-1
+            architecture: arm64
+          - aws_region: eu-west-3
+            architecture: arm64
+          - aws_region: sa-east-1
+            architecture: arm64
+          - aws_region: us-west-1
+            architecture: arm64
+          - aws_region: ap-east-1
+            architecture: arm64
+          - aws_region: eu-south-1
+            architecture: arm64
+          - aws_region: me-south-1
+            architecture: arm64
+    env:
+      LANGUAGE: ${{ inputs.LANGUAGE }}
+      ARTIFACT_ARCHIVE_BASE_NAME: ${{ inputs.ARTIFACT_ARCHIVE_BASE_NAME }}
+      ARTIFACT_NAME: ${{ inputs.ARTIFACT_NAME }}
+      BUCKET_NAME: ${{ github.ref_name }}-${{ matrix.architecture }}-${{ matrix.aws_region }}-${{ github.run_id }}
+      BUCKET_KEY: layer-${{ matrix.architecture }}.zip
+      REGION: ${{ matrix.aws_region }}
+      DIRECTORY: ${{ inputs.LANGUAGE }}
+      ARCHITECTURE: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: ~/artifact
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        env:
+          AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
+        with:
+          role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
+      - name: Install AWS CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install awscli
+      - name: Create S3 Bucket
+        run: make create-bucket
+      - name: Copy Collector and SDK archive to S3 bucket
+        run: make copy-content-to-bucket
+      - name: Set layer architecture
+        run: |
+          if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
+            echo "LAYER_ARCH=x86_64" >> "$GITHUB_ENV"
+          else
+            echo "LAYER_ARCH=arm64" >> "$GITHUB_ENV"
+          fi
+      - name: Create Lambda Layer
+        run: make create-release-lambda-layer
+      - name: Publish Lambda Layer
+        run: make publish-lambda-layer
+      - name: Get latest published lambda layer arn
+        if: success()
+        run: |
+          LAYER_ARN=$(make -s get-public-latest-lambda-layer-arn)
+          echo "| ${{ matrix.aws_region }} | $LAYER_ARN |" > layer-arn-${{ matrix.architecture }}-${{ matrix.aws_region }}
+      - name: Upload Layer ARN
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-layer-arns-artifact
+          path: layer-arn-${{ matrix.architecture }}-${{ matrix.aws_region }}
+      - name: Clean s3
+        if: always()
+        run: make clean-s3

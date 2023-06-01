@@ -1,0 +1,52 @@
+#!/bin/bash
+
+export LAMBDA_LAYER_PKGS_DIR="/opt/python";
+
+# - Set Lambda Layer python packages in PYTHONPATH
+
+export PYTHONPATH="${LAMBDA_LAYER_PKGS_DIR}:${PYTHONPATH}";
+
+# - Set Lambda runtime python packages in PYTHONPATH 
+
+export PYTHONPATH="${LAMBDA_RUNTIME_DIR}:${PYTHONPATH}";
+
+# Configure OpenTelemetry Python with environment variables
+
+# - Set the trace exporter
+
+if [[ -z "${OTEL_TRACES_EXPORTER}" ]]; then
+    export OTEL_TRACES_EXPORTER=otlp;
+fi
+
+if [[ -z "${OTEL_EXPORTER_OTLP_TRACES_PROTOCOL}" ]]; then
+    export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf;
+fi
+
+# - Set the metrics exporter
+
+if [[ -z "${OTEL_METRICS_EXPORTER}" ]]; then
+    export OTEL_METRICS_EXPORTER=none;
+fi
+
+# - Set the service name
+
+if [[ -z "${OTEL_SERVICE_NAME}" ]]; then
+    export OTEL_SERVICE_NAME=${AWS_LAMBDA_FUNCTION_NAME};
+fi
+
+# - Set Lambda specific resource attributes
+
+export LAMBDA_RESOURCE_ATTRIBUTES="cloud.region=${AWS_REGION},cloud.provider=aws,faas.name=${AWS_LAMBDA_FUNCTION_NAME},faas.version=${AWS_LAMBDA_FUNCTION_VERSION}";
+
+if [[ -z "${OTEL_RESOURCE_ATTRIBUTES}" ]]; then
+    export OTEL_RESOURCE_ATTRIBUTES=${LAMBDA_RESOURCE_ATTRIBUTES};
+else
+    export OTEL_RESOURCE_ATTRIBUTES="${LAMBDA_RESOURCE_ATTRIBUTES},${OTEL_RESOURCE_ATTRIBUTES}";
+fi
+
+export ORIG_HANDLER=${_HANDLER};
+export _HANDLER="otel_wrapper.lambda_handler";
+
+# - Call the upstream auto instrumentation script
+
+python3 "${LAMBDA_LAYER_PKGS_DIR}/bin/opentelemetry-instrument" "$@"

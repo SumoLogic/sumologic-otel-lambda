@@ -1,0 +1,5 @@
+# Ignore files combine directory
+combine
+
+# Ignore python sdk archive
+opentelemetry-python.zip

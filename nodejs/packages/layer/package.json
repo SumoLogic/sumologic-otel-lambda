@@ -1,0 +1,55 @@
+{
+  "name": "@opentelemetry-lambda/sdk-layer",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Layer including OpenTelemetry SDK for use with AWS Lambda.",
+  "repository": "open-telemetry/opentelemetry-lambda",
+  "scripts": {
+    "clean": "rimraf build/*",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prepare": "npm run compile",
+    "compile": "tsc -p .",
+    "postcompile": "copyfiles 'node_modules/**' build/workspace/nodejs && copyfiles -f 'scripts/*' build/workspace && copyfiles -f 'build/src/*' build/workspace && cd build/workspace && bestzip ../layer.zip *"
+  },
+  "keywords": [
+    "opentelemetry",
+    "awslambda",
+    "nodejs",
+    "tracing",
+    "profiling",
+    "instrumentation"
+  ],
+  "author": "OpenTelemetry Authors",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "1.4.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "0.38.0",
+    "@opentelemetry/exporter-metrics-otlp-proto": "0.38.0",
+    "@opentelemetry/instrumentation": "0.38.0",
+    "@opentelemetry/instrumentation-aws-lambda": "0.35.1",
+    "@opentelemetry/instrumentation-aws-sdk": "0.34.1",
+    "@opentelemetry/instrumentation-dns": "0.31.3",
+    "@opentelemetry/instrumentation-express": "0.32.2",
+    "@opentelemetry/instrumentation-graphql": "0.34.1",
+    "@opentelemetry/instrumentation-grpc": "0.38.0",
+    "@opentelemetry/instrumentation-hapi": "0.31.2",
+    "@opentelemetry/instrumentation-http": "0.38.0",
+    "@opentelemetry/instrumentation-ioredis": "0.34.1",
+    "@opentelemetry/instrumentation-koa": "0.34.4",
+    "@opentelemetry/instrumentation-mongodb": "0.34.2",
+    "@opentelemetry/instrumentation-mysql": "0.33.1",
+    "@opentelemetry/instrumentation-net": "0.31.2",
+    "@opentelemetry/instrumentation-pg": "0.35.1",
+    "@opentelemetry/instrumentation-redis": "0.34.5",
+    "@opentelemetry/propagator-aws-xray": "1.2.0",
+    "@opentelemetry/resource-detector-aws": "1.2.3",
+    "@opentelemetry/resources": "1.12.0",
+    "@opentelemetry/sdk-trace-base": "1.12.0",
+    "@opentelemetry/sdk-trace-node": "1.12.0",
+    "@opentelemetry/sdk-metrics": "1.12.0"
+  }
+}

@@ -1,0 +1,142 @@
+name: Build and upload artifacts
+
+on:
+  workflow_call:
+    inputs:
+      BUILD_COMMAND:
+        required: true
+        type: string
+      LANGUAGE:
+        required: true
+        type: string
+      ARTIFACT_ARCHIVE_BASE_NAME:
+        required: true
+        type: string
+      ARTIFACT_NAME:
+        required: true
+        type: string
+
+jobs:
+  build-and-upload-artifacts:
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+    env:
+      BUILD_COMMAND: ${{ inputs.BUILD_COMMAND }}
+      LANGUAGE: ${{ inputs.LANGUAGE }}
+      ARTIFACT_ARCHIVE_BASE_NAME: ${{ inputs.ARTIFACT_ARCHIVE_BASE_NAME }}
+      ARTIFACT_NAME: ${{ inputs.ARTIFACT_NAME }}
+      ARCHITECTURE: ${{ matrix.architecture }}
+      GOARCH: ${{ matrix.architecture }}
+    name: Build and upload artifacts
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '^1.19.3'
+      - uses: actions/setup-java@v3
+        if: env.LANGUAGE == 'java'
+        with:
+          distribution: adopt
+          java-version: '11'
+      - name: Cache (Java)
+        if: env.LANGUAGE == 'java'
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v3
+        if: env.LANGUAGE == 'nodejs'
+        with:
+          node-version: '14'
+      - name: Cache (NodeJS)
+        if: env.LANGUAGE == 'nodejs'
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: actions/setup-python@v4
+        if: env.LANGUAGE == 'python'
+        with:
+          python-version: '3.9'
+      - name: Cache (Python)
+        if: env.LANGUAGE == 'python'
+        uses: actions/cache@v3
+        with:
+          path: |
+           ~/go/pkg/mod
+           ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Build artifacts - ${{ matrix.architecture }}
+        run: ${{ env.BUILD_COMMAND }}
+      - name: Upload artifacts - java
+        if: env.LANGUAGE == 'java' && success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: ${{ env.LANGUAGE }}/${{ env.ARTIFACT_ARCHIVE_BASE_NAME }}-${{ matrix.architecture }}.zip
+          if-no-files-found: error
+      - name: Rename sample-app java artifact
+        if: env.LANGUAGE == 'java' && success()
+        run: |
+          mv opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/libs/aws-sdk-all.jar \
+          opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/libs/java-sample-app.jar
+      - name: Upload artifacts - java sample-app
+        if: env.LANGUAGE == 'java' && success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/libs/java-sample-app.jar
+          if-no-files-found: error
+      - name: Upload artifacts - nodejs
+        if: env.LANGUAGE == 'nodejs' && success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: ${{ env.LANGUAGE }}/${{ env.ARTIFACT_ARCHIVE_BASE_NAME }}-${{ matrix.architecture }}.zip
+          if-no-files-found: error
+      - name: Rename sample-app nodejs artifact
+        if: env.LANGUAGE == 'nodejs' && success()
+        run: |
+          mv opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/function.zip \
+          opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/nodejs-sample-app.zip
+      - name: Upload artifacts - nodejs sample-app
+        if: env.LANGUAGE == 'nodejs' && success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/nodejs-sample-app.zip
+          if-no-files-found: error
+      - name: Upload artifacts - python layer
+        if: env.LANGUAGE == 'python' && success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: ${{ env.LANGUAGE }}/${{ env.ARTIFACT_ARCHIVE_BASE_NAME }}-${{ matrix.architecture }}.zip
+          if-no-files-found: error
+      - name: Rename sample-app python artifact
+        if: env.LANGUAGE == 'python' && success()
+        run: |
+          mv opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/build/function.zip \
+          opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/build/python-sample-app.zip
+      - name: Upload artifacts - python sample-app
+        if: env.LANGUAGE == 'python' && success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
+          path: opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/build/python-sample-app.zip
+          if-no-files-found: error
