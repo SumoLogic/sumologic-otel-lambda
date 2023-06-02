@@ -13,7 +13,7 @@ Perform the following steps in order to release new verions of helm chart.
 
     ```bash
     export LANGUAGE= # Possible values: java, nodejs, or python
-    export TAG=release-${LANGUAGE}-vx.y.z
+    export TAG=${LANGUAGE}-vx.y.z
     git checkout main
     git pull
     git tag -sm "${TAG}" "${TAG}"
@@ -25,7 +25,7 @@ Perform the following steps in order to release new verions of helm chart.
     - branch out:
 
      ```bash
-     git checkout -b "${TAG}"
+     git checkout -b "release-${TAG}"
      ```
 
     - in specific language README.md (e.g. python/README.md)
@@ -36,7 +36,7 @@ Perform the following steps in order to release new verions of helm chart.
     - push branch:
 
      ```bash
-     git push -u origin "${TAG}"
+     git push -u origin "release-${TAG}"
      ```
 
 1. Create [new release][releases] based on generated pre-release draft.
