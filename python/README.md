@@ -49,8 +49,8 @@ Sumo Logic lambda layers support:
 
 ## Lambda Container dependencies
 
-- [amd64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/release-python-v1.17.0/opentelemetry-python-amd64.zip)
-- [arm64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/release-python-v1.17.0/opentelemetry-python-arm64.zip)
+- [amd64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.17.0/opentelemetry-python-amd64.zip)
+- [arm64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.17.0/opentelemetry-python-arm64.zip)
 
 ## Sample applications
 
