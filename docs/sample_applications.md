@@ -34,7 +34,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     - `python`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/release-python-v1.17.0/python-sample-app.zip -o python/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.17.0/python-sample-app.zip -o python/sample.zip
         unzip python/sample.zip -d python/sample-apps
         ```
 
