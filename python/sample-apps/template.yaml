@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: Sumo Logic NodeJS Lambda layer sample app
+Description: Sumo Logic Python Lambda layer sample app
 Parameters:
   SumoHttpTracesSourceUrl:
     Type: String
@@ -15,10 +15,10 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: index.handler
-      Runtime: nodejs14.x
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
       CodeUri: ./sample_function
-      Description: NodeJS sample application
+      Description: Python sample application
       MemorySize: 512
       Timeout: 30
       Policies:
@@ -27,7 +27,7 @@ Resources:
         - AmazonS3FullAccess
       Environment:
         Variables:
-          AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-handler
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-instrument
           SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL: !Ref SumoHttpTracesSourceUrl
           OTEL_TRACES_SAMPLER: always_on
           OTEL_RESOURCE_ATTRIBUTES: !Sub 'application=lambda-tests,cloud.account.id=${AWS::AccountId}'
