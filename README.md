@@ -3,7 +3,7 @@
 `sumologic-otel-lambda` publishes preconfigured [OpenTelemetry Lambda](https://github.com/open-telemetry/opentelemetry-lambda) layers which provide instrumentation for AWS Lambda functions.
 Released `sumologic-otel-lambda` layers are available:
 
-- Java wrapper layer contains OpenTelemetry Java `v1.24.0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](./java/README.md).
+- Java wrapper layer contains OpenTelemetry Java `v1.24.0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](https://github.com/SumoLogic-Labs/sumo-opentelemetry-lambda/tree/release-java-v1.24.0).
 
 - NodeJS layer contains OpenTelemetry JavaScript SDK `v1.12.0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](./nodejs/README.md).
 
