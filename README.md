@@ -5,7 +5,7 @@ Released `sumologic-otel-lambda` layers are available:
 
 - Java wrapper layer contains OpenTelemetry Java `v1.24.0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](./java/README.md).
 
-- NodeJS layer contains OpenTelemetry JavaScript SDK `v1.12.0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](./nodejs/README.md).
+- NodeJS layer contains OpenTelemetry JavaScript SDK `v1.12.0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](https://github.com/SumoLogic-Labs/sumo-opentelemetry-lambda/tree/release-nodejs-v1.12.0).
 
 - Python layer contains OpenTelemetry Python SDK `v1.17.0` with instrumentation `v0.38b0` and OpenTelemetry Collector `v0.75.0`. Please see list of [lambda layers](./python/README.md).
 
