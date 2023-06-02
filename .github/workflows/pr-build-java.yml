@@ -6,8 +6,8 @@ on:
       - 'java/**'
       - '.github/workflows/*-java.yml'
       - '.github/workflows/tests.yml'
-      - '!java/**.md'
       - '!java/sample-apps/template.yaml'
+      - '!**/*.md'
 
 jobs:
   build-artifacts:
