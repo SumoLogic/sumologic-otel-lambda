@@ -6,8 +6,8 @@ on:
       - 'python/**'
       - '.github/workflows/*-python.yml'
       - '.github/workflows/tests.yml'
-      - '!python/**.md'
       - '!python/sample-apps/template.yaml'
+      - '!**/*.md'
 
 jobs:
   build-artifacts:

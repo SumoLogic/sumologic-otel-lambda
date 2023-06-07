@@ -6,8 +6,8 @@ on:
       - 'nodejs/**'
       - '.github/workflows/*-nodejs.yml'
       - '.github/workflows/tests.yml'
-      - '!nodejs/**.md'
       - '!nodejs/sample-apps/template.yaml'
+      - '!**/*.md'
 
 jobs:
   build-artifacts:

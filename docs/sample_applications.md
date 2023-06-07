@@ -21,20 +21,20 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     - `java`
 
         ```bash
-        wget https://github.com/SumoLogic-Labs/sumo-opentelemetry-lambda/releases/download/release-java-v1.24.0/java-sample-app.jar -o java/sample-apps/java-sample-app.jar
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/java-v1.24.0/java-sample-app.jar -o java/sample-apps/java-sample-app.jar
         ```
 
     - `nodejs`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/release-nodejs-v1.12.0/nodejs-sample-app.zip -o nodejs/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/nodejs-v1.12.0/nodejs-sample-app.zip -o nodejs/sample.zip
         unzip nodejs/sample.zip -d nodejs/sample-apps
         ```
 
     - `python`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/release-python-v1.17.0/python-sample-app.zip -o python/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.17.0/python-sample-app.zip -o python/sample.zip
         unzip python/sample.zip -d python/sample-apps
         ```
 

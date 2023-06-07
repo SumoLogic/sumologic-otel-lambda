@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Extract tag
         id: extract_tag
-        run: echo "::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/release-python-v})"
+        run: echo "::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/python-v})"
       - name: Download amd64 layer artifacts
         uses: actions/download-artifact@v3
         with:
