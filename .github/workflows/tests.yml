@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         env:
           AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
         with:
@@ -99,7 +99,7 @@ jobs:
             echo "FUNCTION_PACKAGE=~/artifact/python-sample-app.zip" >> "$GITHUB_ENV"
           fi
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         env:
           AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
         with:
@@ -183,7 +183,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         env:
           AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
         with:
