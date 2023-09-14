@@ -45,7 +45,7 @@ jobs:
       lambdalayeramd64: ${{ steps.get-latest-lambda-layer-arn-amd64.outputs.layeramd64 }}
       lambdalayerarm64: ${{ steps.get-latest-lambda-layer-arn-arm64.outputs.layerarm64 }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: actions/setup-python@v4

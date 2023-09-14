@@ -28,7 +28,7 @@ jobs:
     env:
       TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         env:
@@ -78,7 +78,7 @@ jobs:
       LANGUAGE: ${{ inputs.LANGUAGE }}
       TERRAFORM_DIRECTORY: ${{ inputs.LANGUAGE }}/tests/deploy
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: actions/setup-python@v4
@@ -181,7 +181,7 @@ jobs:
     env:
       TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         env:
