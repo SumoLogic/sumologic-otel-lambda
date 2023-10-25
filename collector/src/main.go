@@ -46,9 +46,9 @@ func main() {
 	logger.Info("Launching OpenTelemetry Lambda extension", zap.String("version", Version))
 
 	// Check for deprecated usage of SUMOLOGIC_HTTP_TRACES_URL environment variable
-	sumoLogicOtlpHttpEndpoint, ok := os.LookupEnv("SUMOLOGIC_HTTP_TRACES_URL")
+	sumoLogicOtlpHttpEndpoint, ok := os.LookupEnv("SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL")
 	if ok {
-		logger.Warn("SUMOLOGIC_HTTP_TRACES_URL is deprecated. Use SUMO_OTLP_HTTP_ENDPOINT_URL environment variable instead. Please see OTLP/http endpoint generation guide https://help.sumologic.com/docs/send-data/hosted-collectors/http-source/otlp/.")
+		logger.Warn("SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL is deprecated. Use SUMO_OTLP_HTTP_ENDPOINT_URL environment variable instead. Please see OTLP/http endpoint generation guide https://help.sumologic.com/docs/send-data/hosted-collectors/http-source/otlp/.")
 		os.Setenv("SUMO_OTLP_HTTP_ENDPOINT_URL", sumoLogicOtlpHttpEndpoint)
 	}
 
