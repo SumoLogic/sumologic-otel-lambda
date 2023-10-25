@@ -1,8 +1,15 @@
 #!/bin/bash
 
+# Copy changed files
+
+cp ./src/main.go ../opentelemetry-lambda/collector
+cp ./src/internal/telemetryapi/listener.go ../opentelemetry-lambda/collector/internal/telemetryapi/listener.go
+
 # Build collector
 
 pushd ../opentelemetry-lambda/collector || exit
+make install-tools
+make gofmt
 make package
 popd || exit
 
