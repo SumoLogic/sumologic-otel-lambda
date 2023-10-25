@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Deprecate SUMOLOGIC_HTTP_TRACES_URL
-
-if [[ -z "${SUMOLOGIC_HTTP_TRACES_URL}" ]]; then
-  export OTLP_HTTP_ENDPOINT_URL=${SUMOLOGIC_HTTP_TRACES_URL}
-fi
-
 # - Use Instrumentation
 
 export NODE_OPTIONS="${NODE_OPTIONS} --require /opt/wrapper.js"
