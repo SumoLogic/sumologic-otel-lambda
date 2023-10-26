@@ -51,7 +51,6 @@ func TestSpansjava(t *testing.T) {
 						commonJavaAttributes,
 						map[string]string{
 							"net.peer.name":    "s3.eu-central-1.amazonaws.com",
-							"net.transport":    "ip_tcp",
 							"http.flavor":      "1.1",
 							"http.method":      "GET",
 							"http.status_code": "200",
