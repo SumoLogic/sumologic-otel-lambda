@@ -127,7 +127,9 @@ jobs:
           terraform init \
           --backend-config "bucket=${{ env.BUCKET_NAME }}" \
           --backend-config "key=${{ env.BUCKET_KEY }}" \
-          --backend-config "region=${{ matrix.aws_region }}"
+          --backend-config "region=${{ matrix.aws_region }}" \
+          --backend-config "encrypt=true" \
+          --backend-config "dynamodb_table=SumoOtelLambdaTfStateLock"
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Deploy lambda sample function
         run: terraform apply -auto-approve
