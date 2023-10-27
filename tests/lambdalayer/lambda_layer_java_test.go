@@ -36,7 +36,7 @@ func TestSpansjava(t *testing.T) {
 			expectedSpanCount: 2,
 			expectedSpans: []Span{
 				{
-					Name:         "GET /{proxy+}",
+					Name:         "GET /" + javaFunctionName,
 					ParentSpanId: "",
 					Attributes: lo.Assign(
 						commonJavaAttributes,

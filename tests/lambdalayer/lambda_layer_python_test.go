@@ -43,10 +43,10 @@ func TestSpanspython(t *testing.T) {
 						commonPythonAttributes,
 						map[string]string{
 							"faas.trigger":     "http",
-							"http.route":       "/{proxy+}",
+							"http.route":       "/" + pythonFunctionName,
 							"http.scheme":      "https",
 							"http.status_code": "200",
-							"http.target":      "/{proxy+}",
+							"http.target":      "/" + pythonFunctionName,
 						}),
 				},
 				{
@@ -65,7 +65,7 @@ func TestSpanspython(t *testing.T) {
 						commonPythonAttributes,
 						map[string]string{
 							"http.url":    "http://httpbin.org/",
-							"http.method": "GET",
+							"http.method": "HTTP GET",
 						}),
 				},
 			},
