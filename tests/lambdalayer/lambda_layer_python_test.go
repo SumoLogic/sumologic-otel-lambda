@@ -65,7 +65,7 @@ func TestSpanspython(t *testing.T) {
 						commonPythonAttributes,
 						map[string]string{
 							"http.url":    "http://httpbin.org/",
-							"http.method": "HTTP GET",
+							"http.method": "GET",
 						}),
 				},
 			},
