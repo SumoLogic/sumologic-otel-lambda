@@ -25,10 +25,10 @@ module "python-hello-lambda-function" {
   ])
 
   environment_variables = {
-    AWS_LAMBDA_EXEC_WRAPPER            = "/opt/otel-instrument"
-    SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL = "http://${var.collector_endpoint}:3000/receiver"
-    OTEL_TRACES_SAMPLER                = "always_on"
-    OTEL_RESOURCE_ATTRIBUTES           = "application=lambda-tests,cloud.account.id=${data.aws_caller_identity.current.account_id}"
+    AWS_LAMBDA_EXEC_WRAPPER     = "/opt/otel-instrument"
+    SUMO_OTLP_HTTP_ENDPOINT_URL = "http://${var.collector_endpoint}:3000/receiver"
+    OTEL_TRACES_SAMPLER         = "always_on"
+    OTEL_RESOURCE_ATTRIBUTES    = "application=lambda-tests,cloud.account.id=${data.aws_caller_identity.current.account_id}"
   }
 
   tracing_mode = var.tracing_mode
