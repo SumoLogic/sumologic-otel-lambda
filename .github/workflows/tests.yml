@@ -159,7 +159,7 @@ jobs:
       - name: Wait for api gw...
         run: sleep 30
       - name: Generate traffic
-        run: curl -sS ${{ steps.lambda-function-url.outputs.gwurl }}/%7Bproxy+%7D
+        run: curl -sS ${{ steps.lambda-function-url.outputs.gwurl }}/${{ steps.lambda-function-name.outputs.functionname }}
       - name: Wait for data to flow...
         run: sleep 60
       - name: Execute tests
