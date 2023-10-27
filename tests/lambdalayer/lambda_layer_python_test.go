@@ -60,7 +60,7 @@ func TestSpanspython(t *testing.T) {
 						}),
 				},
 				{
-					Name: "HTTP GET",
+					Name: "GET",
 					Attributes: lo.Assign(
 						commonPythonAttributes,
 						map[string]string{
