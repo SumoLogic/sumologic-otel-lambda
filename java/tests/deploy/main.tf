@@ -53,4 +53,5 @@ module "api-gateway" {
   name                = "${var.name}-${replace(var.architecture, "_", "-")}-${local.timestamp_sanitized}"
   function_name       = module.java-hello-lambda-function.lambda_function_name
   function_invoke_arn = module.java-hello-lambda-function.lambda_function_invoke_arn
+  lambda_function     = module.java-hello-lambda-function
 }

@@ -24,3 +24,8 @@ variable "enable_xray_tracing" {
   description = "Whether to enable xray tracing of the API gateway"
   default     = false
 }
+
+variable "lambda_function" {
+  description = "Lambda function module"
+  default     = null
+}

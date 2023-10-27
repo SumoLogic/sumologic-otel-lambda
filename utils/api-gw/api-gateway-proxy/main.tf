@@ -26,10 +26,7 @@ resource "aws_api_gateway_integration" "lambda" {
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [
-    aws_api_gateway_integration.lambda
-  ]
-
+  depends_on  = [var.lambda_function, aws_lambda_permission.lambda_api_allow_gateway, aws_api_gateway_integration.lambda]
   rest_api_id = aws_api_gateway_rest_api.api.id
 }
 
@@ -38,11 +35,16 @@ resource "aws_api_gateway_stage" "test" {
   rest_api_id          = aws_api_gateway_rest_api.api.id
   deployment_id        = aws_api_gateway_deployment.deployment.id
   xray_tracing_enabled = var.enable_xray_tracing
+
+  lifecycle {
+    ignore_changes = [stage_name]
+  }
 }
 
 resource "aws_lambda_permission" "lambda_api_allow_gateway" {
   action        = "lambda:InvokeFunction"
   function_name = var.function_name
-  qualifier     = var.function_qualifier
-  principal     = "apigateway.amazonaws.com"
+  # qualifier = var.function_qualifier
+  principal  = "apigateway.amazonaws.com"
+  source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
