@@ -15,8 +15,6 @@ All notable changes to this project will be documented in this file.
 
 - chore(collector): fix `listenerAPI` available port association [#19]
 
-[#19]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/19
-[#20]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/20
 [python-v1.20.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.20.0
 
 ## [nodejs-v1.17.1]
