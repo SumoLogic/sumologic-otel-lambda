@@ -39,19 +39,19 @@ function defaultConfigureInstrumentations() {
   const { NetInstrumentation } = require('@opentelemetry/instrumentation-net');
   const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
   const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
-  return [new DnsInstrumentation(),
-  new ExpressInstrumentation(),
-  new GraphQLInstrumentation(),
-  new GrpcInstrumentation(),
-  new HapiInstrumentation(),
-  new HttpInstrumentation(),
-  new IORedisInstrumentation(),
-  new KoaInstrumentation(),
-  new MongoDBInstrumentation(),
-  new MySQLInstrumentation(),
-  new NetInstrumentation(),
-  new PgInstrumentation(),
-  new RedisInstrumentation(),
+  return [ new DnsInstrumentation(),
+    new ExpressInstrumentation(),
+    new GraphQLInstrumentation(),
+    new GrpcInstrumentation(),
+    new HapiInstrumentation(),
+    new HttpInstrumentation(),
+    new IORedisInstrumentation(),
+    new KoaInstrumentation(),
+    new MongoDBInstrumentation(),
+    new MySQLInstrumentation(),
+    new NetInstrumentation(),
+    new PgInstrumentation(),
+    new RedisInstrumentation(),
   ]
 }
 
