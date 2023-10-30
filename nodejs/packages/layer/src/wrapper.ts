@@ -39,19 +39,19 @@ function defaultConfigureInstrumentations() {
   const { NetInstrumentation } = require('@opentelemetry/instrumentation-net');
   const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
   const { RedisInstrumentation } = require('@opentelemetry/instrumentation-redis');
-  return [new DnsInstrumentation(),
-  new ExpressInstrumentation(),
-  new GraphQLInstrumentation(),
-  new GrpcInstrumentation(),
-  new HapiInstrumentation(),
-  new HttpInstrumentation(),
-  new IORedisInstrumentation(),
-  new KoaInstrumentation(),
-  new MongoDBInstrumentation(),
-  new MySQLInstrumentation(),
-  new NetInstrumentation(),
-  new PgInstrumentation(),
-  new RedisInstrumentation(),
+  return [ new DnsInstrumentation(),
+    new ExpressInstrumentation(),
+    new GraphQLInstrumentation(),
+    new GrpcInstrumentation(),
+    new HapiInstrumentation(),
+    new HttpInstrumentation(),
+    new IORedisInstrumentation(),
+    new KoaInstrumentation(),
+    new MongoDBInstrumentation(),
+    new MySQLInstrumentation(),
+    new NetInstrumentation(),
+    new PgInstrumentation(),
+    new RedisInstrumentation(),
   ]
 }
 
@@ -87,7 +87,7 @@ if (logLevel === DiagLogLevel.DEBUG) {
   console.log('OTEL_RESOURCE_ATTRIBUTES value', process.env.OTEL_RESOURCE_ATTRIBUTES);
   console.log('OTEL_SERVICE_NAME value', process.env.OTEL_SERVICE_NAME);
   console.log('OTEL_TRACES_SAMPLER value', process.env.OTEL_TRACES_SAMPLER);
-  console.log('SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL value', process.env.SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL);
+  console.log('SUMO_OTLP_HTTP_ENDPOINT_URL value', process.env.SUMO_OTLP_HTTP_ENDPOINT_URL);
   console.log('SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION value', process.env.SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION);
 }
 

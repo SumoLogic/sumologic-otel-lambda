@@ -18,7 +18,7 @@ var commonNodeJSAttributes = map[string]string{
 	"cloud.region":           "eu-central-1",
 	"telemetry.sdk.language": "nodejs",
 	"telemetry.sdk.name":     "opentelemetry",
-	"telemetry.sdk.version":  "1.12.0",
+	"telemetry.sdk.version":  "1.17.1",
 	"service.name":           nodejsFunctionName,
 	"process.runtime.name":   "nodejs",
 	"faas.name":              nodejsFunctionName,
