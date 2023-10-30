@@ -16,10 +16,10 @@ var commonPythonAttributes = map[string]string{
 	"cloud.account.id":       pythonAwsAccountId,
 	"cloud.provider":         "aws",
 	"cloud.region":           "eu-central-1",
-	"telemetry.auto.version": "0.38b0",
+	"telemetry.auto.version": "0.41b0",
 	"telemetry.sdk.language": "python",
 	"telemetry.sdk.name":     "opentelemetry",
-	"telemetry.sdk.version":  "1.17.0",
+	"telemetry.sdk.version":  "1.20.0",
 	"service.name":           pythonFunctionName,
 	"faas.name":              pythonFunctionName,
 	"faas.version":           "$LATEST",
@@ -43,10 +43,10 @@ func TestSpanspython(t *testing.T) {
 						commonPythonAttributes,
 						map[string]string{
 							"faas.trigger":     "http",
-							"http.route":       "/{proxy+}",
+							"http.route":       "/" + pythonFunctionName,
 							"http.scheme":      "https",
 							"http.status_code": "200",
-							"http.target":      "/{proxy+}",
+							"http.target":      "/" + pythonFunctionName,
 						}),
 				},
 				{
@@ -60,7 +60,7 @@ func TestSpanspython(t *testing.T) {
 						}),
 				},
 				{
-					Name: "HTTP GET",
+					Name: "GET",
 					Attributes: lo.Assign(
 						commonPythonAttributes,
 						map[string]string{

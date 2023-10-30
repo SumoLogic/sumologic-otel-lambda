@@ -25,12 +25,12 @@ popd || exit
 ## Copy and extract all files
 mkdir combine
 cp ../collector/collector-layer.zip ./combine
-cp ../opentelemetry-lambda/python/src/build/layer.zip ./combine
+cp ../opentelemetry-lambda/python/src/build/opentelemetry-python-layer.zip ./combine
 
 unzip -qo combine/collector-layer.zip -d combine
 rm combine/collector-layer.zip
-unzip -qo combine/layer.zip -d combine
-rm combine/layer.zip
+unzip -qo combine/opentelemetry-python-layer.zip -d combine
+rm combine/opentelemetry-python-layer.zip
 
 ## Copy scripts
 cp scripts/otel-instrument combine/otel-instrument

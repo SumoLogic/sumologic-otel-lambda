@@ -26,6 +26,9 @@ jobs:
     outputs:
       receivermockendpoint: ${{ steps.get-receiver-mock-endpoint.outputs.endpoint }}
     env:
+      BUCKET_NAME: lambda-tests-terraform-state-bucket
+      BUCKET_KEY: receivermock.${{ matrix.architecture}}.${{ inputs.LANGUAGE }}/terraform_state.tfstate
+      LANGUAGE: ${{ inputs.LANGUAGE }}
       TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +49,13 @@ jobs:
         with:
           terraform_wrapper: false
       - name: Initialize terraform
-        run: terraform init
+        run: |
+          terraform init \
+          --backend-config "bucket=${{ env.BUCKET_NAME }}" \
+          --backend-config "key=${{ env.BUCKET_KEY }}" \
+          --backend-config "region=${{ matrix.aws_region }}" \
+          --backend-config "encrypt=true" \
+          --backend-config "dynamodb_table=SumoOtelLambdaTfStateLock"
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Apply terraform
         run: terraform apply -auto-approve
@@ -127,7 +136,9 @@ jobs:
           terraform init \
           --backend-config "bucket=${{ env.BUCKET_NAME }}" \
           --backend-config "key=${{ env.BUCKET_KEY }}" \
-          --backend-config "region=${{ matrix.aws_region }}"
+          --backend-config "region=${{ matrix.aws_region }}" \
+          --backend-config "encrypt=true" \
+          --backend-config "dynamodb_table=SumoOtelLambdaTfStateLock"
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Deploy lambda sample function
         run: terraform apply -auto-approve
@@ -148,7 +159,7 @@ jobs:
       - name: Wait for api gw...
         run: sleep 30
       - name: Generate traffic
-        run: curl -sS ${{ steps.lambda-function-url.outputs.gwurl }}/%7Bproxy+%7D
+        run: curl -sS ${{ steps.lambda-function-url.outputs.gwurl }}/${{ steps.lambda-function-name.outputs.functionname }}
       - name: Wait for data to flow...
         run: sleep 60
       - name: Execute tests

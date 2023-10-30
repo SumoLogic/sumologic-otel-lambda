@@ -18,7 +18,7 @@ var commonJavaAttributes = map[string]string{
 	"cloud.region":           "eu-central-1",
 	"telemetry.sdk.language": "java",
 	"telemetry.sdk.name":     "opentelemetry",
-	"telemetry.sdk.version":  "1.24.0",
+	"telemetry.sdk.version":  "1.30.1",
 	"service.name":           javaFunctionName,
 	"faas.name":              javaFunctionName,
 	"faas.version":           "$LATEST",
@@ -36,7 +36,7 @@ func TestSpansjava(t *testing.T) {
 			expectedSpanCount: 2,
 			expectedSpans: []Span{
 				{
-					Name:         "GET /{proxy+}",
+					Name:         "GET /" + javaFunctionName,
 					ParentSpanId: "",
 					Attributes: lo.Assign(
 						commonJavaAttributes,
@@ -51,8 +51,6 @@ func TestSpansjava(t *testing.T) {
 						commonJavaAttributes,
 						map[string]string{
 							"net.peer.name":    "s3.eu-central-1.amazonaws.com",
-							"net.transport":    "ip_tcp",
-							"http.flavor":      "1.1",
 							"http.method":      "GET",
 							"http.status_code": "200",
 							"http.url":         "https://s3.eu-central-1.amazonaws.com/",

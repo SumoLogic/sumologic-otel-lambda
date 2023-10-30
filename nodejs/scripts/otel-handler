@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# - Use Instrumentation
+
 export NODE_OPTIONS="${NODE_OPTIONS} --require /opt/wrapper.js"
 
 # - Set the service name

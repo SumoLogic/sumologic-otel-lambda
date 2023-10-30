@@ -6,7 +6,7 @@ receivers:
 
 exporters:
   otlphttp:
-    traces_endpoint: $SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL
+    endpoint: $SUMO_OTLP_HTTP_ENDPOINT_URL
 
 service:
   pipelines:

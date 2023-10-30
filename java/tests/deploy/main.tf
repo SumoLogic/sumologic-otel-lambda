@@ -25,10 +25,10 @@ module "java-hello-lambda-function" {
   ])
 
   environment_variables = {
-    AWS_LAMBDA_EXEC_WRAPPER            = "/opt/otel-proxy-handler"
-    SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL = "http://${var.collector_endpoint}:3000/receiver/v1/traces"
-    OTEL_TRACES_SAMPLER                = "always_on"
-    OTEL_RESOURCE_ATTRIBUTES           = "application=lambda-tests,cloud.account.id=${data.aws_caller_identity.current.account_id}"
+    AWS_LAMBDA_EXEC_WRAPPER     = "/opt/otel-proxy-handler"
+    SUMO_OTLP_HTTP_ENDPOINT_URL = "http://${var.collector_endpoint}:3000/receiver"
+    OTEL_TRACES_SAMPLER         = "always_on"
+    OTEL_RESOURCE_ATTRIBUTES    = "application=lambda-tests,cloud.account.id=${data.aws_caller_identity.current.account_id}"
   }
 
   tracing_mode = var.tracing_mode
@@ -53,4 +53,5 @@ module "api-gateway" {
   name                = "${var.name}-${replace(var.architecture, "_", "-")}-${local.timestamp_sanitized}"
   function_name       = module.java-hello-lambda-function.lambda_function_name
   function_invoke_arn = module.java-hello-lambda-function.lambda_function_invoke_arn
+  lambda_function     = module.java-hello-lambda-function
 }
