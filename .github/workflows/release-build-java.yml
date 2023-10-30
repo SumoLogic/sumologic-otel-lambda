@@ -55,7 +55,7 @@ jobs:
         with:
           name: ${{ github.ref_name }}-java-arm64-layer-arns-artifact
           path: arm64layerarns/
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v4
       - name: Install markdown-table-formatter
         run: npm install markdown-table-formatter --save
       - name: Create amd64 layers table
