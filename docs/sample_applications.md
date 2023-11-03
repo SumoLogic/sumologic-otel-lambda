@@ -34,7 +34,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     - `python`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.17.0/python-sample-app.zip -o python/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.20.0/python-sample-app.zip -o python/sample.zip
         unzip python/sample.zip -d python/sample-apps
         ```
 
@@ -61,7 +61,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     ```bash
     sam build -u && sam deploy --stack-name sumo-logic-example-function \
     --template template.yaml \
-    --parameter-overrides ParameterKey=SumoHttpTracesSourceUrl,ParameterValue=${SUMO_HTTP_TRACES_SOURCE_URL} \
+    --parameter-overrides ParameterKey=SumoHttpTracesSourceUrl,ParameterValue=${SUMO_OTLP_HTTP_ENDPOINT_URL} \
     --capabilities CAPABILITY_IAM \
     --region ${AWS_REGION} \
     --resolve-s3
