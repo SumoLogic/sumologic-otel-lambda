@@ -27,7 +27,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     - `nodejs`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/nodejs-v1.12.0/nodejs-sample-app.zip -o nodejs/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/nodejs-v1.17.1/nodejs-sample-app.zip -o nodejs/sample.zip
         unzip nodejs/sample.zip -d nodejs/sample-apps
         ```
 

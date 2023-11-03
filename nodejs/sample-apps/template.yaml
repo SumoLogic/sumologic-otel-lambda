@@ -4,7 +4,7 @@ Description: Sumo Logic NodeJS Lambda layer sample app
 Parameters:
   SumoHttpTracesSourceUrl:
     Type: String
-    Description: Enter Sumo Logic Http Traces Source Url https://help.sumologic.com/docs/apm/traces/get-started-transaction-tracing/http-traces-source/
+    Description: Enter Sumo Logic OTLP/HTTP Source Url https://help.sumologic.com/docs/send-data/hosted-collectors/http-source/otlp/
 Resources:
   api:
     Type: AWS::Serverless::Api
@@ -28,7 +28,7 @@ Resources:
       Environment:
         Variables:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-handler
-          SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL: !Ref SumoHttpTracesSourceUrl
+          SUMO_OTLP_HTTP_ENDPOINT_URL: !Ref SumoHttpTracesSourceUrl
           OTEL_TRACES_SAMPLER: always_on
           OTEL_RESOURCE_ATTRIBUTES: !Sub 'application=lambda-tests,cloud.account.id=${AWS::AccountId}'
       Tracing: PassThrough
