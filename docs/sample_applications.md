@@ -6,7 +6,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
 
 - configured [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
-- [Sumo Logic HTTP Traces Source URL](https://help.sumologic.com/docs/apm/traces/get-started-transaction-tracing/http-traces-source/)
+- [Sumo Logic OTLP/HTTP Source URL](https://help.sumologic.com/docs/send-data/hosted-collectors/http-source/otlp/)
 
 ## Deployment
 
@@ -21,20 +21,20 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     - `java`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/java-v1.24.0/java-sample-app.jar -o java/sample-apps/java-sample-app.jar
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/java-v1.30.1/java-sample-app.jar -o java/sample-apps/java-sample-app.jar
         ```
 
     - `nodejs`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/nodejs-v1.12.0/nodejs-sample-app.zip -o nodejs/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/nodejs-v1.17.1/nodejs-sample-app.zip -o nodejs/sample.zip
         unzip nodejs/sample.zip -d nodejs/sample-apps
         ```
 
     - `python`
 
         ```bash
-        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.17.0/python-sample-app.zip -o python/sample.zip
+        wget https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.20.0/python-sample-app.zip -o python/sample.zip
         unzip python/sample.zip -d python/sample-apps
         ```
 
@@ -50,7 +50,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
 1. Set Sumo Logic HTTP Traces Source URL and AWS Region
 
     ```bash
-    export SUMO_HTTP_TRACES_SOURCE_URL=https://YOUR_HTTP_TRACES_SOURCE_URL
+    export SUMO_OTLP_HTTP_ENDPOINT_URL=https://YOUR_OTLP_HTTP_SOURCE_URL
     export AWS_REGION=YOUR_AWS_REGION
     ```
 
@@ -61,7 +61,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     ```bash
     sam build -u && sam deploy --stack-name sumo-logic-example-function \
     --template template.yaml \
-    --parameter-overrides ParameterKey=SumoHttpTracesSourceUrl,ParameterValue=${SUMO_HTTP_TRACES_SOURCE_URL} \
+    --parameter-overrides ParameterKey=SumoHttpTracesSourceUrl,ParameterValue=${SUMO_OTLP_HTTP_ENDPOINT_URL} \
     --capabilities CAPABILITY_IAM \
     --region ${AWS_REGION} \
     --resolve-s3
@@ -72,7 +72,7 @@ Every Sumo Logic Lambda Layer can be tested with the following sample applicatio
     ```bash
     sam deploy --stack-name sumo-logic-example-function \
     --template template.yaml \
-    --parameter-overrides ParameterKey=SumoHttpTracesSourceUrl,ParameterValue=${SUMO_HTTP_TRACES_SOURCE_URL} \
+    --parameter-overrides ParameterKey=SumoHttpTracesSourceUrl,ParameterValue=${SUMO_OTLP_HTTP_ENDPOINT_URL} \
     --capabilities CAPABILITY_IAM \
     --region ${AWS_REGION} \
     --resolve-s3
