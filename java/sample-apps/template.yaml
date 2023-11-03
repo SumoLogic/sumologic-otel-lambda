@@ -4,7 +4,7 @@ Description: Sumo Logic Java Lambda layer sample app
 Parameters:
   SumoHttpTracesSourceUrl:
     Type: String
-    Description: Enter Sumo Logic Http Traces Source Url https://help.sumologic.com/docs/apm/traces/get-started-transaction-tracing/http-traces-source/
+    Description: Enter Sumo Logic OTLP/HTTP Source Url https://help.sumologic.com/docs/send-data/hosted-collectors/http-source/otlp/
 Resources:
   api:
     Type: AWS::Serverless::Api
