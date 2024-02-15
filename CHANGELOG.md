@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file.
 
+## [java-v1.30.1]
+
+### Released 2023-10-31
+
+### Changed
+
+- chore(java): update collector and instrumentation to latest upstream version [#19]
+- chore(collector): deprecate `SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL` in favor of `SUMO_OTLP_HTTP_ENDPOINT_URL`. [#19]
+
+### Fixed
+
+- chore(collector): fix `listenerAPI` available port association [#19]
+
+[java-v1.30.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v1.30.1
+
+## [python-v1.20.0]
+
+### Released 2023-10-30
+
+### Changed
+
+- chore(python): update collector and instrumentation to latest upstream version [#19]
+- chore(collector): deprecate `SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL` in favor of `SUMO_OTLP_HTTP_ENDPOINT_URL`. [#19]
+
+### Fixed
+
+- chore(collector): fix `listenerAPI` available port association [#19]
+
+[python-v1.20.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.20.0
+
+## [nodejs-v1.17.1]
+
+### Released 2023-10-30
+
+### Changed
+
+- chore(nodejs): update collector and instrumentation to latest upstream version [#19]
+- chore(collector): deprecate `SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL` in favor of `SUMO_OTLP_HTTP_ENDPOINT_URL`. [#19]
+- chore(nodejs): update instrumentation dependencies [#20]
+
+### Fixed
+
+- chore(collector): fix `listenerAPI` available port association [#19]
+
+[#19]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/19
+[#20]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/20
+[nodejs-v1.17.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v1.17.1
+
 ## [java-v1.24.0]
 
 ### Released 2023-06-02
