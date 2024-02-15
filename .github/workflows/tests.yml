@@ -45,7 +45,7 @@ jobs:
         with:
           path: ${{ env.TERRAFORM_DIRECTORY }}
           key: ${{ inputs.LANGUAGE }}-${{ github.run_id }}
-      - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - name: Initialize terraform
@@ -128,7 +128,7 @@ jobs:
           else
             echo "LAYER_ARN=${{ inputs.LAYER_ARN_AMD64 }}" >>  "$GITHUB_ENV"
           fi
-      - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - name: Initialize terraform
@@ -201,7 +201,7 @@ jobs:
           role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
           aws-region: ${{ matrix.aws_region }}
           mask-aws-account-id: false
-      - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - name: Cache terraform working directory
