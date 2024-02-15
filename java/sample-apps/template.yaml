@@ -4,7 +4,7 @@ Description: Sumo Logic Java Lambda layer sample app
 Parameters:
   SumoHttpTracesSourceUrl:
     Type: String
-    Description: Enter Sumo Logic Http Traces Source Url https://help.sumologic.com/docs/apm/traces/get-started-transaction-tracing/http-traces-source/
+    Description: Enter Sumo Logic OTLP/HTTP Source Url https://help.sumologic.com/docs/send-data/hosted-collectors/http-source/otlp/
 Resources:
   api:
     Type: AWS::Serverless::Api
@@ -28,7 +28,7 @@ Resources:
       Environment:
         Variables:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-proxy-handler
-          SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL: !Ref SumoHttpTracesSourceUrl
+          SUMO_OTLP_HTTP_ENDPOINT_URL: !Ref SumoHttpTracesSourceUrl
           OTEL_TRACES_SAMPLER: always_on
           OTEL_RESOURCE_ATTRIBUTES: !Sub 'application=lambda-tests,cloud.account.id=${AWS::AccountId}'
       Tracing: PassThrough
@@ -49,34 +49,34 @@ Outputs:
 Mappings:
   RegionMap:
     ap-northeast-1:
-      layer: "arn:aws:lambda:ap-northeast-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:ap-northeast-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     ap-northeast-2:
-      layer: "arn:aws:lambda:ap-northeast-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:ap-northeast-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     ap-south-1:
-      layer: "arn:aws:lambda:ap-south-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:ap-south-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     ap-southeast-1:
-      layer: "arn:aws:lambda:ap-southeast-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:ap-southeast-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     ap-southeast-2:
-      layer: "arn:aws:lambda:ap-southeast-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:ap-southeast-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     ca-central-1:
-      layer: "arn:aws:lambda:ca-central-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:ca-central-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     eu-central-1:
-      layer: "arn:aws:lambda:eu-central-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:eu-central-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     eu-north-1:
-      layer: "arn:aws:lambda:eu-north-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:eu-north-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     eu-west-1:
-      layer: "arn:aws:lambda:eu-west-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:eu-west-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     eu-west-2:
-      layer: "arn:aws:lambda:eu-west-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:eu-west-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     eu-west-3:
-      layer: "arn:aws:lambda:eu-west-3:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:eu-west-3:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     sa-east-1:
-      layer: "arn:aws:lambda:sa-east-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:sa-east-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     us-east-1:
-      layer: "arn:aws:lambda:us-east-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:us-east-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     us-east-2:
-      layer: "arn:aws:lambda:us-east-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:us-east-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     us-west-1:
-      layer: "arn:aws:lambda:us-west-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:us-west-1:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
     us-west-2:
-      layer: "arn:aws:lambda:us-west-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-24-0:1"
+      layer: "arn:aws:lambda:us-west-2:663229565520:layer:sumologic-otel-lambda-java-x86_64-v1-30-1:2"
