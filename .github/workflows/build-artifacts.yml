@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '^1.19.3'
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: env.LANGUAGE == 'java'
         with:
           distribution: adopt
