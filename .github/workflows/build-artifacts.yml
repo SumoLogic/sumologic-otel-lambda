@@ -34,10 +34,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '^1.19.3'
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: env.LANGUAGE == 'java'
         with:
           distribution: adopt
@@ -53,7 +53,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         if: env.LANGUAGE == 'nodejs'
         with:
           node-version: '14'
