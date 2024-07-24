@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - name: Check if documentation related files changed
         id: changed-files
-        uses: tj-actions/changed-files@v39
+        uses: tj-actions/changed-files@v44
         with:
           files: |
             **/*.md
@@ -78,7 +78,7 @@ jobs:
     needs: [docs-changed]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v4
         if: needs.docs-changed.outputs.any_changed == 'true'
       - name: Install markdown-table-formatter
         if: needs.docs-changed.outputs.any_changed == 'true'
