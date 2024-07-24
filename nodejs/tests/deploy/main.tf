@@ -12,7 +12,7 @@ module "nodejs-hello-lambda-function" {
   architectures = compact([var.architecture])
   function_name = "${var.name}-${replace(var.architecture, "_", "-")}-${local.timestamp_sanitized}"
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 
   create_package         = false
   local_existing_package = var.function_package

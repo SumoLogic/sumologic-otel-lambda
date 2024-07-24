@@ -37,7 +37,7 @@ resource "aws_api_gateway_integration" "lambda" {
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on  = [var.lambda_function, aws_lambda_permission.lambda_api_allow_gateway, aws_api_gateway_integration.lambda]
+  depends_on  = [aws_api_gateway_resource.api_resource, aws_api_gateway_method.proxy_method, aws_lambda_permission.lambda_api_allow_gateway, aws_api_gateway_integration.lambda, var.lambda_function]
   rest_api_id = aws_api_gateway_rest_api.api.id
 
   lifecycle {
