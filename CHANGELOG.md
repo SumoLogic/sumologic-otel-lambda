@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [nodejs-v1.17.2]
+
+### Released 2024-07-24
+
+### Changed
+
+- refactor(node.js): converted es format file to cjs, update supported runtimes [#35]
+
+[#35]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/35
+[nodejs-v1.17.2]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v1.17.2
+
 ## [java-v1.30.1]
 
 ### Released 2023-10-31
