@@ -1,4 +1,4 @@
-# Sumo Logic Distribution for OpenTelemetry NodeJS Lambda Layer 1.17.2 version
+# Sumo Logic Distribution for OpenTelemetry NodeJS Lambda Layer unreleased version
 
 Sumo Logic lambda layers support:
 
