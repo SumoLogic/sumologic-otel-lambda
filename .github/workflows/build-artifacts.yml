@@ -56,7 +56,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: env.LANGUAGE == 'nodejs'
         with:
-          node-version: '20'
+          node-version: '16'
       - name: Cache (NodeJS)
         if: env.LANGUAGE == 'nodejs'
         uses: actions/cache@v3
