@@ -85,6 +85,7 @@ jobs:
         run: ${{ env.BUILD_COMMAND }}
 
       - name: Setup tmate session
+        if: env.LANGUAGE == 'nodejs'
         uses: mxschmitt/action-tmate@v3
 
       - name: Upload artifacts - java
