@@ -83,11 +83,6 @@ jobs:
             ${{ runner.os }}-pip-
       - name: Build artifacts - ${{ matrix.architecture }}
         run: ${{ env.BUILD_COMMAND }}
-
-      - name: Setup tmate session
-        if: env.LANGUAGE == 'nodejs'
-        uses: mxschmitt/action-tmate@v3
-
       - name: Upload artifacts - java
         if: env.LANGUAGE == 'java' && success()
         uses: actions/upload-artifact@v4
