@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [python-v1.32.0]
 
 ### Released 2025-06-06
+
 ### Changed
+
 - Update collector and instrumentation to latest upstream version
 
 [python-v1.32.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.32.0
-
 
 ## [nodejs-v1.17.2]
 
