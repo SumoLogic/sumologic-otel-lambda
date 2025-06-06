@@ -1,11 +1,13 @@
 # Releasing guide
 
-Perform the following steps in order to release new verions of helm chart.
+Perform the following steps in order to release new versions:
 
 1. Prepare and merge PR with following changes:
 
     - update [changelog](../CHANGELOG.md)
     - in [README.md](../README.md) update version of the latest lambda layers
+    - update `<language>/layer-data.sh`
+    - update `<language>/sample-apps/template.yaml`
 
 1. Create and push new tag:
 
