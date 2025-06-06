@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'python/**'
+      - 'opentelemetry-lambda/**'
       - '.github/workflows/*-python.yml'
       - '.github/workflows/tests.yml'
       - '!python/sample-apps/template.yaml'

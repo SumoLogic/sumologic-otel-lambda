@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'nodejs/**'
+      - 'opentelemetry-lambda/**'
       - '.github/workflows/*-nodejs.yml'
       - '.github/workflows/tests.yml'
       - '!nodejs/sample-apps/template.yaml'
