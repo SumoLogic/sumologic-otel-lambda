@@ -104,7 +104,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-layer-arns-artifact
+          name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-layer-arns-artifact-${{ matrix.aws_region }}
           path: layer-arn-${{ matrix.architecture }}-${{ matrix.aws_region }}
       - name: Clean s3
         if: always()
