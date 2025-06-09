@@ -48,12 +48,14 @@ jobs:
       - name: Download amd64 Layer ARNs
         uses: actions/download-artifact@v4
         with:
-          name: ${{ github.ref_name }}-java-amd64-layer-arns-artifact
+          pattern: ${{ github.ref_name }}-java-amd64-layer-arns-artifact-*
+          merge-multiple: true
           path: amd64layerarns/
       - name: Download arm64 Layer ARNs
         uses: actions/download-artifact@v4
         with:
-          name: ${{ github.ref_name }}-java-arm64-layer-arns-artifact
+          pattern: ${{ github.ref_name }}-java-arm64-layer-arns-artifact-*
+          merge-multiple: true
           path: arm64layerarns/
       - uses: actions/setup-node@v4
       - name: Install markdown-table-formatter
@@ -72,7 +74,7 @@ jobs:
           echo "AMD64_LAYERS<<EOF" >> "$GITHUB_ENV"
           cat amd64layerslist.md >> "$GITHUB_ENV"
           echo "EOF" >> "$GITHUB_ENV"
-      - name: Create amd64 layers table
+      - name: Create arm64 layers table
         id: arm64layerslist
         run: |
           echo "### ARM64 Lambda Layers List" > arm64layerslist.md
