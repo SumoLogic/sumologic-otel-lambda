@@ -74,7 +74,7 @@ jobs:
           echo "AMD64_LAYERS<<EOF" >> "$GITHUB_ENV"
           cat amd64layerslist.md >> "$GITHUB_ENV"
           echo "EOF" >> "$GITHUB_ENV"
-      - name: Create amd64 layers table
+      - name: Create arm64 layers table
         id: arm64layerslist
         run: |
           echo "### ARM64 Lambda Layers List" > arm64layerslist.md
