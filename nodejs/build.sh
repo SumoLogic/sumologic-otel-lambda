@@ -46,13 +46,10 @@ cp ./packages/layer/tsconfig.webpack.json ../opentelemetry-lambda/nodejs/package
 cp ./packages/layer/install-externals.sh ../opentelemetry-lambda/nodejs/packages/layer/install-externals.sh 2>/dev/null || true
 chmod +x ../opentelemetry-lambda/nodejs/packages/layer/install-externals.sh 2>/dev/null || true
 
-# Build nodejs sdk
+# Build nodejs sdk and sample apps
 pushd ../opentelemetry-lambda/nodejs || exit
 npm install
-popd || exit
-
-# Build the layer specifically
-pushd ../opentelemetry-lambda/nodejs/packages/layer || exit
+# Build all packages including sample apps with lerna
 npm run build
 popd || exit
 
