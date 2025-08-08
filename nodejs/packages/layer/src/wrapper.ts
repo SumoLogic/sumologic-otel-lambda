@@ -28,7 +28,7 @@ const { diag, DiagConsoleLogger, DiagLogLevel } = require("@opentelemetry/api");
 const { getEnv } = require("@opentelemetry/core");
 const {
   OTLPTraceExporter,
-} = require("@opentelemetry/exporter-trace-otlp-proto");
+} = require("@opentelemetry/exporter-trace-otlp-http");
 const {
   MeterProvider,
   MeterProviderOptions,

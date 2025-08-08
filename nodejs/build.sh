@@ -1,5 +1,25 @@
 #!/bin/bash
 
+# Detect host architecture
+ARCH=$(uname -m)
+case $ARCH in
+    x86_64)
+        ARCHITECTURE="amd64"
+        ;;
+    arm64|aarch64)
+        ARCHITECTURE="arm64"
+        ;;
+    *)
+        echo "Unsupported architecture: $ARCH"
+        exit 1
+        ;;
+esac
+
+echo "Building for architecture: $ARCHITECTURE"
+
+# Export for use in collector build
+export ARCHITECTURE
+
 # Build collector
 
 pushd ../collector || exit
@@ -7,23 +27,34 @@ pushd ../collector || exit
 popd || exit
 
 # Copy wrapper.ts
-
 cp ./packages/layer/src/wrapper.ts ../opentelemetry-lambda/nodejs/packages/layer/src/wrapper.ts
 
 # Copy package.json
-
 cp ./packages/layer/package.json ../opentelemetry-lambda/nodejs/packages/layer/package.json
 
-# Build nodejs sdk
+# Copy global.d.ts with type declarations
+cp ./packages/layer/src/global.d.ts ../opentelemetry-lambda/nodejs/packages/layer/src/global.d.ts
 
+# Copy other necessary configuration files
+cp ./packages/layer/webpack.config.js ../opentelemetry-lambda/nodejs/packages/layer/webpack.config.js 2>/dev/null || true
+cp ./packages/layer/tsconfig.webpack.json ../opentelemetry-lambda/nodejs/packages/layer/tsconfig.webpack.json 2>/dev/null || true
+cp ./packages/layer/install-externals.sh ../opentelemetry-lambda/nodejs/packages/layer/install-externals.sh 2>/dev/null || true
+chmod +x ../opentelemetry-lambda/nodejs/packages/layer/install-externals.sh 2>/dev/null || true
+
+# Build nodejs sdk
 pushd ../opentelemetry-lambda/nodejs || exit
 npm install
+popd || exit
+
+# Build the layer specifically
+pushd ../opentelemetry-lambda/nodejs/packages/layer || exit
+npm run build
 popd || exit
 
 # Combine collector extension with nodejs sdk
 ## Copy and extract all files
 mkdir combine
-cp ../collector/collector-layer.zip ./combine
+cp ../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-${ARCHITECTURE}.zip ./combine/collector-layer.zip
 cp ../opentelemetry-lambda/nodejs/packages/layer/build/layer.zip ./combine
 
 unzip -qo combine/collector-layer.zip -d combine
