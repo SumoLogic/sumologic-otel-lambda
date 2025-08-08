@@ -1,24 +1,29 @@
 #!/bin/bash
 
-# Detect host architecture
-ARCH=$(uname -m)
-case $ARCH in
-    x86_64)
-        ARCHITECTURE="amd64"
-        ;;
-    arm64|aarch64)
-        ARCHITECTURE="arm64"
-        ;;
-    *)
-        echo "Unsupported architecture: $ARCH"
-        exit 1
-        ;;
-esac
-
-echo "Building for architecture: $ARCHITECTURE"
+# Detect or use provided architecture
+if [ -z "$ARCHITECTURE" ]; then
+    # Auto-detect host architecture if ARCHITECTURE not set
+    ARCH=$(uname -m)
+    case $ARCH in
+        x86_64)
+            ARCHITECTURE="amd64"
+            ;;
+        arm64|aarch64)
+            ARCHITECTURE="arm64"
+            ;;
+        *)
+            echo "Unsupported architecture: $ARCH"
+            exit 1
+            ;;
+    esac
+    echo "Auto-detected architecture: $ARCHITECTURE"
+else
+    echo "Using provided architecture: $ARCHITECTURE"
+fi
 
 # Export for use in collector build
 export ARCHITECTURE
+export GOARCH=$ARCHITECTURE
 
 # Build collector
 
