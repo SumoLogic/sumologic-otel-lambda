@@ -13,3 +13,8 @@ service:
     traces:
       receivers: [otlp]
       exporters: [otlphttp]
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: none
