@@ -56,7 +56,7 @@ popd || exit
 # Combine collector extension with nodejs sdk
 ## Copy and extract all files
 mkdir combine
-cp ../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-${ARCHITECTURE}.zip ./combine/collector-layer.zip
+cp ../collector/collector-layer.zip ./combine/collector-layer.zip
 cp ../opentelemetry-lambda/nodejs/packages/layer/build/layer.zip ./combine
 
 unzip -qo combine/collector-layer.zip -d combine

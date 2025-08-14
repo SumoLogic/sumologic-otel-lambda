@@ -10,7 +10,11 @@ cp ./src/internal/telemetryapi/listener.go ../opentelemetry-lambda/collector/int
 pushd ../opentelemetry-lambda/collector || exit
 make install-tools
 make gofmt
-make package
+make build
+# Package manually to fix config
+mkdir -p build/collector-config
+cp ../../collector/config/config.yaml build/collector-config/config.yaml
+cd build && zip -r opentelemetry-collector-layer-${ARCH_TO_USE}.zip collector-config extensions
 popd || exit
 
 # Add config.yaml

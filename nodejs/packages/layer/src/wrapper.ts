@@ -14,39 +14,217 @@
  * limitations under the License.
  */
 
-// Wrapper for OpenTelemetry v2.0.0 compatibility
+const {
+  NodeTracerConfig,
+  NodeTracerProvider,
+} = require("@opentelemetry/sdk-trace-node");
+const {
+  BatchSpanProcessor,
+  ConsoleSpanExporter,
+  SDKRegistrationConfig,
+  SimpleSpanProcessor,
+} = require("@opentelemetry/sdk-trace-base");
+const {
+  Instrumentation,
+  registerInstrumentations,
+} = require("@opentelemetry/instrumentation");
+const { awsLambdaDetector } = require("@opentelemetry/resource-detector-aws");
+const {
+  detectResources,
+  envDetector,
+  processDetector,
+} = require("@opentelemetry/resources");
+const {
+  AwsInstrumentation,
+} = require("@opentelemetry/instrumentation-aws-sdk");
+const {
+  AwsLambdaInstrumentation,
+} = require("@opentelemetry/instrumentation-aws-lambda");
+const { diag, DiagConsoleLogger, DiagLogLevel } = require("@opentelemetry/api");
+const { getStringFromEnv } = require("@opentelemetry/core");
+const {
+  OTLPTraceExporter,
+} = require("@opentelemetry/exporter-trace-otlp-http");
+const {
+  MeterProvider,
+  MeterProviderOptions,
+} = require("@opentelemetry/sdk-metrics");
 
-const api = require("@opentelemetry/api");
-const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
-const { Resource } = require("@opentelemetry/resources");
-const { BatchSpanProcessor } = require("@opentelemetry/sdk-trace-base");
-const { OTLPTraceExporter } = require("@opentelemetry/exporter-trace-otlp-http");
-const { registerInstrumentations } = require("@opentelemetry/instrumentation");
-const { AwsLambdaInstrumentation } = require("@opentelemetry/instrumentation-aws-lambda");
-const { AwsInstrumentation } = require("@opentelemetry/instrumentation-aws-sdk");
+function defaultConfigureInstrumentations() {
+  // Use require statements for instrumentation to avoid having to have transitive dependencies on all the typescript
+  // definitions.
+  const { DnsInstrumentation } = require("@opentelemetry/instrumentation-dns");
+  const {
+    ExpressInstrumentation,
+  } = require("@opentelemetry/instrumentation-express");
+  const {
+    GraphQLInstrumentation,
+  } = require("@opentelemetry/instrumentation-graphql");
+  const {
+    GrpcInstrumentation,
+  } = require("@opentelemetry/instrumentation-grpc");
+  const {
+    HapiInstrumentation,
+  } = require("@opentelemetry/instrumentation-hapi");
+  const {
+    HttpInstrumentation,
+  } = require("@opentelemetry/instrumentation-http");
+  const {
+    IORedisInstrumentation,
+  } = require("@opentelemetry/instrumentation-ioredis");
+  const { KoaInstrumentation } = require("@opentelemetry/instrumentation-koa");
+  const {
+    MongoDBInstrumentation,
+  } = require("@opentelemetry/instrumentation-mongodb");
+  const {
+    MySQLInstrumentation,
+  } = require("@opentelemetry/instrumentation-mysql");
+  const { NetInstrumentation } = require("@opentelemetry/instrumentation-net");
+  const { PgInstrumentation } = require("@opentelemetry/instrumentation-pg");
+  const {
+    RedisInstrumentation,
+  } = require("@opentelemetry/instrumentation-redis");
+  return [
+    new DnsInstrumentation(),
+    new ExpressInstrumentation(),
+    new GraphQLInstrumentation(),
+    new GrpcInstrumentation(),
+    new HapiInstrumentation(),
+    new HttpInstrumentation(),
+    new IORedisInstrumentation(),
+    new KoaInstrumentation(),
+    new MongoDBInstrumentation(),
+    new MySQLInstrumentation(),
+    new NetInstrumentation(),
+    new PgInstrumentation(),
+    new RedisInstrumentation(),
+  ];
+}
 
-// Simple initialization for v2.0.0
-console.log("Initializing OpenTelemetry v2.0.0 wrapper");
+global.configureTracerProvider = function (tracerProvider) {};
+global.configureTracer = function (defaultConfig) {
+  return defaultConfig;
+};
+global.configureSdkRegistration = function (defaultSdkRegistration) {
+  return defaultSdkRegistration;
+};
+global.configureMeter = function (defaultConfig) {
+  return defaultConfig;
+};
+global.configureMeterProvider = function (meterProvider) {};
+global.configureInstrumentations = function () {
+  return [];
+};
 
-const provider = new NodeTracerProvider({
-  resource: Resource.default()
-});
+// configure lambda logging
+const logLevel: any = getStringFromEnv('OTEL_LOG_LEVEL') || DiagLogLevel.INFO;
+diag.setLogger(new DiagConsoleLogger(), logLevel);
 
-const exporter = new OTLPTraceExporter({
-  url: process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || "http://localhost:4318/v1/traces"
-});
+console.log("Registering OpenTelemetry");
 
-provider.addSpanProcessor(new BatchSpanProcessor(exporter));
+// By default use OpenTelemetry context propagation
+let disableAwsContextPropagation = true;
+const sumoOtelDisableAwsContextPropagationVal =
+  process.env.SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION;
+if (
+  sumoOtelDisableAwsContextPropagationVal === "false" ||
+  sumoOtelDisableAwsContextPropagationVal === "False"
+) {
+  disableAwsContextPropagation = false;
+}
 
-// Register the provider
-api.trace.setGlobalTracerProvider(provider);
+// For debug purposes only
+if (logLevel === DiagLogLevel.DEBUG) {
+  console.log("Debug environment variables status");
+  console.log(
+    "AWS_LAMBDA_EXEC_WRAPPER value ",
+    process.env.AWS_LAMBDA_EXEC_WRAPPER
+  );
+  console.log(
+    "OTEL_RESOURCE_ATTRIBUTES value",
+    process.env.OTEL_RESOURCE_ATTRIBUTES
+  );
+  console.log("OTEL_SERVICE_NAME value", process.env.OTEL_SERVICE_NAME);
+  console.log("OTEL_TRACES_SAMPLER value", process.env.OTEL_TRACES_SAMPLER);
+  console.log(
+    "SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL value",
+    process.env.SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL
+  );
+  console.log(
+    "SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION value",
+    process.env.SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION
+  );
+}
 
-// Register basic instrumentations
+const instrumentations = [
+  new AwsInstrumentation({
+    suppressInternalInstrumentation: true,
+  }),
+  new AwsLambdaInstrumentation({
+    disableAwsContextPropagation: disableAwsContextPropagation,
+  }),
+  ...(typeof configureInstrumentations === "function"
+    ? configureInstrumentations
+    : defaultConfigureInstrumentations)(),
+];
+
+// Register instrumentations synchronously to ensure code is patched even before provider is ready.
 registerInstrumentations({
-  instrumentations: [
-    new AwsLambdaInstrumentation(),
-    new AwsInstrumentation()
-  ]
+  instrumentations,
 });
 
-console.log("OpenTelemetry v2.0.0 wrapper initialized successfully");
+async function initializeProvider() {
+  const resource = await detectResources({
+    detectors: [awsLambdaDetector, envDetector, processDetector],
+  });
+
+  let config = {
+    resource,
+  };
+  if (typeof configureTracer === "function") {
+    config = configureTracer(config);
+  }
+
+  const tracerProvider = new NodeTracerProvider(config);
+  if (typeof configureTracerProvider === "function") {
+    configureTracerProvider(tracerProvider);
+  } else {
+    // defaults
+    tracerProvider.addSpanProcessor(
+      new BatchSpanProcessor(new OTLPTraceExporter())
+    );
+  }
+  // logging for debug
+  if ((logLevel as any) === DiagLogLevel.DEBUG) {
+    tracerProvider.addSpanProcessor(
+      new SimpleSpanProcessor(new ConsoleSpanExporter())
+    );
+  }
+
+  let sdkRegistrationConfig = {};
+  if (typeof configureSdkRegistration === "function") {
+    sdkRegistrationConfig = configureSdkRegistration(sdkRegistrationConfig);
+  }
+  tracerProvider.register(sdkRegistrationConfig);
+
+  // Configure default meter provider (do not export metrics)
+  let meterConfig = {
+    resource,
+  };
+  if (typeof configureMeter === "function") {
+    meterConfig = configureMeter(meterConfig);
+  }
+
+  const meterProvider = new MeterProvider(meterConfig);
+  if (typeof configureMeterProvider === "function") {
+    configureMeterProvider(meterProvider);
+  }
+
+  // Re-register instrumentation with initialized provider. Patched code will see the update.
+  registerInstrumentations({
+    instrumentations,
+    tracerProvider,
+    meterProvider,
+  });
+}
+initializeProvider();
