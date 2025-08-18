@@ -85,6 +85,7 @@ function defaultConfigureInstrumentations() {
     RedisInstrumentation,
   } = require("@opentelemetry/instrumentation-redis");
   return [
+    new AwsInstrumentation(),
     new DnsInstrumentation(),
     new ExpressInstrumentation(),
     new GraphQLInstrumentation(),
@@ -101,7 +102,6 @@ function defaultConfigureInstrumentations() {
   ];
 }
 
-global.configureTracerProvider = function (tracerProvider) {};
 global.configureTracer = function (defaultConfig) {
   return defaultConfig;
 };
@@ -116,9 +116,78 @@ global.configureInstrumentations = function () {
   return [];
 };
 
+// Environment-based exporter configuration (OTel 2.0 pattern)
+function getExportersFromEnv() {
+  console.log("*** DEBUG: getExportersFromEnv() called");
+  console.log("*** DEBUG: OTEL_TRACES_EXPORTER =", process.env.OTEL_TRACES_EXPORTER);
+  console.log("*** DEBUG: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT =", process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT);
+  
+  if (
+    process.env.OTEL_TRACES_EXPORTER == null ||
+    process.env.OTEL_TRACES_EXPORTER.trim() === ''
+  ) {
+    console.log("*** DEBUG: No OTEL_TRACES_EXPORTER set, defaulting to OTLP exporter");
+    const defaultExporter = new OTLPTraceExporter();
+    console.log("*** DEBUG: Default OTLP exporter created, endpoint:", defaultExporter.url);
+    return [defaultExporter];
+  }
+  if (process.env.OTEL_TRACES_EXPORTER.includes('none')) {
+    console.log("*** DEBUG: OTEL_TRACES_EXPORTER includes 'none', returning null");
+    return null;
+  }
+
+  const stringToExporter = new Map([
+    ['otlp', () => {
+      console.log("*** DEBUG: Creating OTLP exporter");
+      const exporter = new OTLPTraceExporter();
+      console.log("*** DEBUG: OTLP exporter created, endpoint:", exporter.url);
+      return exporter;
+    }],
+    ['console', () => {
+      console.log("*** DEBUG: Creating Console exporter");
+      return new ConsoleSpanExporter();
+    }],
+  ]);
+  const exporters: any[] = [];
+  process.env.OTEL_TRACES_EXPORTER.split(',').map((exporterName: string) => {
+    exporterName = exporterName.toLowerCase().trim();
+    console.log("*** DEBUG: Processing exporter:", exporterName);
+    const exporter = stringToExporter.get(exporterName);
+    if (exporter) {
+      const createdExporter = exporter();
+      exporters.push(createdExporter);
+      console.log("*** DEBUG: Added exporter:", exporterName);
+    } else {
+      console.warn(
+        `Invalid exporter "${exporterName}" specified in the environment variable OTEL_TRACES_EXPORTER`,
+      );
+    }
+  });
+  
+  if (exporters.length === 0) {
+    console.log("*** DEBUG: No valid exporters found, defaulting to OTLP");
+    const fallbackExporter = new OTLPTraceExporter();
+    console.log("*** DEBUG: Fallback OTLP exporter created, endpoint:", fallbackExporter.url);
+    return [fallbackExporter];
+  }
+  
+  console.log("*** DEBUG: Returning", exporters.length, "exporters");
+  return exporters;
+}
+
 // configure lambda logging
 const logLevel: any = getStringFromEnv('OTEL_LOG_LEVEL') || DiagLogLevel.INFO;
 diag.setLogger(new DiagConsoleLogger(), logLevel);
+
+// Map vendor-specific endpoint to OTel variable before exporter creation
+// Keep using localhost collector but ensure proper endpoint mapping
+if (process.env.SUMO_OTLP_HTTP_ENDPOINT_URL && !process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
+  // Use localhost collector as intended, but log the Sumo endpoint for collector to use
+  process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://localhost:4318/v1/traces";
+} else if (!process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
+  // Default fallback to localhost collector
+  process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://localhost:4318/v1/traces";
+}
 
 console.log("Registering OpenTelemetry");
 
@@ -147,8 +216,8 @@ if (logLevel === DiagLogLevel.DEBUG) {
   console.log("OTEL_SERVICE_NAME value", process.env.OTEL_SERVICE_NAME);
   console.log("OTEL_TRACES_SAMPLER value", process.env.OTEL_TRACES_SAMPLER);
   console.log(
-    "SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL value",
-    process.env.SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL
+    "SUMO_OTLP_HTTP_ENDPOINT_URL value",
+    process.env.SUMO_OTLP_HTTP_ENDPOINT_URL
   );
   console.log(
     "SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION value",
@@ -173,39 +242,68 @@ registerInstrumentations({
   instrumentations,
 });
 
-async function initializeProvider() {
-  const resource = await detectResources({
-    detectors: [awsLambdaDetector, envDetector, processDetector],
-  });
-
+async function initializeTracerProvider(resource: any) {
   let config = {
     resource,
+    spanProcessors: [] as any[],
   };
+
+  const exporters = getExportersFromEnv();
+  if (!exporters) {
+    return undefined;
+  }
+
   if (typeof configureTracer === "function") {
     config = configureTracer(config);
   }
 
-  const tracerProvider = new NodeTracerProvider(config);
-  if (typeof configureTracerProvider === "function") {
-    configureTracerProvider(tracerProvider);
-  } else {
-    // defaults
-    tracerProvider.addSpanProcessor(
-      new BatchSpanProcessor(new OTLPTraceExporter())
-    );
+  // Configure span processors based on exporters
+  if (exporters.length) {
+    config.spanProcessors = [];
+    exporters.forEach((exporter: any) => {
+      if (exporter instanceof ConsoleSpanExporter) {
+        config.spanProcessors.push(new SimpleSpanProcessor(exporter));
+      } else {
+        config.spanProcessors.push(new BatchSpanProcessor(exporter));
+      }
+    });
   }
-  // logging for debug
+
+  config.spanProcessors = config.spanProcessors || [];
+  if (config.spanProcessors.length === 0) {
+    // Default
+    config.spanProcessors.push(new BatchSpanProcessor(new OTLPTraceExporter()));
+  }
+
+  // Logging for debug
   if ((logLevel as any) === DiagLogLevel.DEBUG) {
-    tracerProvider.addSpanProcessor(
+    config.spanProcessors.push(
       new SimpleSpanProcessor(new ConsoleSpanExporter())
     );
   }
+
+  const tracerProvider = new NodeTracerProvider(config);
 
   let sdkRegistrationConfig = {};
   if (typeof configureSdkRegistration === "function") {
     sdkRegistrationConfig = configureSdkRegistration(sdkRegistrationConfig);
   }
   tracerProvider.register(sdkRegistrationConfig);
+
+  return tracerProvider;
+}
+
+async function initializeProvider() {
+  const resource = await detectResources({
+    detectors: [awsLambdaDetector, envDetector, processDetector],
+  });
+
+  const tracerProvider = await initializeTracerProvider(resource);
+  
+  if (!tracerProvider) {
+    console.log("*** DEBUG: No tracer provider initialized (exporters disabled)");
+    return;
+  }
 
   // Configure default meter provider (do not export metrics)
   let meterConfig = {

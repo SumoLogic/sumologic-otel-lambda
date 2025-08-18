@@ -5,6 +5,9 @@
 cp ./src/main.go ../opentelemetry-lambda/collector
 cp ./src/internal/telemetryapi/listener.go ../opentelemetry-lambda/collector/internal/telemetryapi/listener.go
 
+# Detect architecture to use for building
+ARCH_TO_USE=$(./detect-arch.sh)
+
 # Build collector
 
 pushd ../opentelemetry-lambda/collector || exit
@@ -18,9 +21,6 @@ cd build && zip -r opentelemetry-collector-layer-${ARCH_TO_USE}.zip collector-co
 popd || exit
 
 # Add config.yaml
-
-# Detect architecture to use for building
-ARCH_TO_USE=$(./detect-arch.sh)
 
 cp ../opentelemetry-lambda/collector/build/opentelemetry-collector-layer-${ARCH_TO_USE}.zip .
 unzip -qo opentelemetry-collector-layer-${ARCH_TO_USE}.zip
