@@ -118,45 +118,27 @@ global.configureInstrumentations = function () {
 
 // Environment-based exporter configuration (OTel 2.0 pattern)
 function getExportersFromEnv() {
-  console.log("*** DEBUG: getExportersFromEnv() called");
-  console.log("*** DEBUG: OTEL_TRACES_EXPORTER =", process.env.OTEL_TRACES_EXPORTER);
-  console.log("*** DEBUG: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT =", process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT);
-  
   if (
     process.env.OTEL_TRACES_EXPORTER == null ||
     process.env.OTEL_TRACES_EXPORTER.trim() === ''
   ) {
-    console.log("*** DEBUG: No OTEL_TRACES_EXPORTER set, defaulting to OTLP exporter");
-    const defaultExporter = new OTLPTraceExporter();
-    console.log("*** DEBUG: Default OTLP exporter created, endpoint:", defaultExporter.url);
-    return [defaultExporter];
+    return [new OTLPTraceExporter()];
   }
   if (process.env.OTEL_TRACES_EXPORTER.includes('none')) {
-    console.log("*** DEBUG: OTEL_TRACES_EXPORTER includes 'none', returning null");
     return null;
   }
 
   const stringToExporter = new Map([
-    ['otlp', () => {
-      console.log("*** DEBUG: Creating OTLP exporter");
-      const exporter = new OTLPTraceExporter();
-      console.log("*** DEBUG: OTLP exporter created, endpoint:", exporter.url);
-      return exporter;
-    }],
-    ['console', () => {
-      console.log("*** DEBUG: Creating Console exporter");
-      return new ConsoleSpanExporter();
-    }],
+    ['otlp', () => new OTLPTraceExporter()],
+    ['console', () => new ConsoleSpanExporter()],
   ]);
   const exporters: any[] = [];
   process.env.OTEL_TRACES_EXPORTER.split(',').map((exporterName: string) => {
     exporterName = exporterName.toLowerCase().trim();
-    console.log("*** DEBUG: Processing exporter:", exporterName);
     const exporter = stringToExporter.get(exporterName);
     if (exporter) {
       const createdExporter = exporter();
       exporters.push(createdExporter);
-      console.log("*** DEBUG: Added exporter:", exporterName);
     } else {
       console.warn(
         `Invalid exporter "${exporterName}" specified in the environment variable OTEL_TRACES_EXPORTER`,
@@ -165,13 +147,9 @@ function getExportersFromEnv() {
   });
   
   if (exporters.length === 0) {
-    console.log("*** DEBUG: No valid exporters found, defaulting to OTLP");
-    const fallbackExporter = new OTLPTraceExporter();
-    console.log("*** DEBUG: Fallback OTLP exporter created, endpoint:", fallbackExporter.url);
-    return [fallbackExporter];
+    return [new OTLPTraceExporter()];
   }
   
-  console.log("*** DEBUG: Returning", exporters.length, "exporters");
   return exporters;
 }
 
@@ -215,10 +193,6 @@ if (logLevel === DiagLogLevel.DEBUG) {
   );
   console.log("OTEL_SERVICE_NAME value", process.env.OTEL_SERVICE_NAME);
   console.log("OTEL_TRACES_SAMPLER value", process.env.OTEL_TRACES_SAMPLER);
-  console.log(
-    "SUMO_OTLP_HTTP_ENDPOINT_URL value",
-    process.env.SUMO_OTLP_HTTP_ENDPOINT_URL
-  );
   console.log(
     "SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION value",
     process.env.SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION
@@ -301,7 +275,6 @@ async function initializeProvider() {
   const tracerProvider = await initializeTracerProvider(resource);
   
   if (!tracerProvider) {
-    console.log("*** DEBUG: No tracer provider initialized (exporters disabled)");
     return;
   }
 
