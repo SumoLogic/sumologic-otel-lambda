@@ -41,7 +41,7 @@ const {
   AwsLambdaInstrumentation,
 } = require("@opentelemetry/instrumentation-aws-lambda");
 const { diag, DiagConsoleLogger, DiagLogLevel } = require("@opentelemetry/api");
-const { getStringFromEnv } = require("@opentelemetry/core");
+const { getStringFromEnv, diagLogLevelFromString } = require("@opentelemetry/core");
 const {
   OTLPTraceExporter,
 } = require("@opentelemetry/exporter-trace-otlp-http");
@@ -154,7 +154,7 @@ function getExportersFromEnv() {
 }
 
 // configure lambda logging
-const logLevel: any = getStringFromEnv('OTEL_LOG_LEVEL') || DiagLogLevel.INFO;
+const logLevel = diagLogLevelFromString(getStringFromEnv('OTEL_LOG_LEVEL'));
 diag.setLogger(new DiagConsoleLogger(), logLevel);
 
 // Map vendor-specific endpoint to OTel variable before exporter creation
@@ -250,7 +250,7 @@ async function initializeTracerProvider(resource: any) {
   }
 
   // Logging for debug
-  if ((logLevel as any) === DiagLogLevel.DEBUG) {
+  if (logLevel === DiagLogLevel.DEBUG) {
     config.spanProcessors.push(
       new SimpleSpanProcessor(new ConsoleSpanExporter())
     );
