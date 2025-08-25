@@ -6,10 +6,15 @@ receivers:
 
 exporters:
   otlphttp:
-    endpoint: $SUMO_OTLP_HTTP_ENDPOINT_URL
+    endpoint: ${env:SUMO_OTLP_HTTP_ENDPOINT_URL}
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       exporters: [otlphttp]
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: none

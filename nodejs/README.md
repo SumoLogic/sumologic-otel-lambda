@@ -2,7 +2,7 @@
 
 Sumo Logic lambda layers support:
 
-- `nodejs16.x`, `nodejs18.x` and `nodejs20.x` runtimes
+- `nodejs18.x`, `nodejs20.x` and `nodejs22.x` runtimes
 - `x86_64` and `arm64` architectures
 
 ## AMD64 Lambda Layers List

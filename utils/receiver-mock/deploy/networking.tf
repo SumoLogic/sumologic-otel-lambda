@@ -64,8 +64,8 @@ resource "aws_route_table_association" "public" {
 
 
 resource "aws_eip" "eip" {
-  count = length(var.private_subnets)
-  vpc   = true
+  count  = length(var.private_subnets)
+  domain = "vpc"
   tags = {
     Name        = "${var.app_name}-eip-${count.index + 1}"
     Environment = var.app_environment
