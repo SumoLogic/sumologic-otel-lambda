@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [nodejs-v2.0.0]
+
+### Released 2025-09-02
+
+### Changed
+
+- feat: upgrade to OpenTelemetry JavaScript SDK 2.0.0 [#50]
+- feat: update nodejs lambda layer compatible runtimes to 18.x, 20.x, 22.x (removed 16.x) [#50]
+- feat: improve type safety and error handling in wrapper initialization [#50]
+- chore: update all OpenTelemetry dependencies to latest stable versions [#50]
+
+[#50]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/50
+[nodejs-v2.0.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.0.0
+
 ## [java-v2.15.0]
 
 ### Released 2025-06-09
