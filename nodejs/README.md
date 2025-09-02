@@ -8,8 +8,8 @@ Sumo Logic lambda layers support:
 
 ## AMD64 Lambda Layers List
 
-| Region         | ARN                                                                                            |
-|----------------|------------------------------------------------------------------------------------------------|
+| Region         | ARN                                                                                           |
+|----------------|-----------------------------------------------------------------------------------------------|
 | af-south-1     | arn:aws:lambda:af-south-1:663229565520:layer:sumologic-otel-lambda-nodejs-x86_64-v2-0-0:1     |
 | ap-east-1      | arn:aws:lambda:ap-east-1:663229565520:layer:sumologic-otel-lambda-nodejs-x86_64-v2-0-0:1      |
 | ap-northeast-1 | arn:aws:lambda:ap-northeast-1:663229565520:layer:sumologic-otel-lambda-nodejs-x86_64-v2-0-0:1 |
@@ -34,8 +34,8 @@ Sumo Logic lambda layers support:
 
 ## ARM64 Lambda Layers List
 
-| Region         | ARN                                                                                           |
-|----------------|-----------------------------------------------------------------------------------------------|
+| Region         | ARN                                                                                          |
+|----------------|----------------------------------------------------------------------------------------------|
 | ap-northeast-1 | arn:aws:lambda:ap-northeast-1:663229565520:layer:sumologic-otel-lambda-nodejs-arm64-v2-0-0:1 |
 | ap-northeast-3 | arn:aws:lambda:ap-northeast-3:663229565520:layer:sumologic-otel-lambda-nodejs-arm64-v2-0-0:1 |
 | ap-south-1     | arn:aws:lambda:ap-south-1:663229565520:layer:sumologic-otel-lambda-nodejs-arm64-v2-0-0:1     |
