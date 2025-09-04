@@ -2,7 +2,7 @@
 
 Sumo Logic lambda layers support:
 
-- `nodejs18.x`, `nodejs20.x` and `nodejs22.x` runtimes
+- `nodejs18.x` or later
 - `x86_64` and `arm64` architectures
 - OpenTelemetry JavaScript SDK 2.0.0
 
