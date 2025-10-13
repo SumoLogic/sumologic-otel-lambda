@@ -16,7 +16,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: io.opentelemetry.lambda.sampleapps.awssdk.AwsSdkRequestHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       CodeUri: ./java-sample-app.jar
       Description: Java sample application
       MemorySize: 512

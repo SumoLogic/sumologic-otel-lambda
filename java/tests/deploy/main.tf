@@ -12,7 +12,7 @@ module "java-hello-lambda-function" {
   architectures = compact([var.architecture])
   function_name = "${var.name}-${replace(var.architecture, "_", "-")}-${local.timestamp_sanitized}"
   handler       = "io.opentelemetry.lambda.sampleapps.awssdk.AwsSdkRequestHandler::handleRequest"
-  runtime       = "java11"
+  runtime       = "java17"
 
   create_package         = false
   local_existing_package = var.function_package

@@ -41,7 +41,7 @@ jobs:
         if: env.LANGUAGE == 'java'
         with:
           distribution: adopt
-          java-version: '11'
+          java-version: '17'
       - name: Cache (Java)
         if: env.LANGUAGE == 'java'
         uses: actions/cache@v3
