@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [java-v2.20.1]
+
+### Released 2025-10-13
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[java-v2.20.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.20.1
+
 ## [nodejs-v2.0.0]
 
 ### Released 2025-09-02
