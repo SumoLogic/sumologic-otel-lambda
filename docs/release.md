@@ -18,7 +18,7 @@ Perform the following steps in order to release new versions:
     export TAG=${LANGUAGE}-vx.y.z
     git checkout main
     git pull
-    git tag -sm "${TAG}" "${TAG}"
+    git tag -m "${TAG}" "${TAG}"
     git push origin "${TAG}"
     ```
 
