@@ -1,4 +1,4 @@
-# Sumo Logic Distribution for OpenTelemetry Java Lambda Layer unreleased version
+# Sumo Logic Distribution for OpenTelemetry Java Lambda Layer v2.19.0
 
 Layers for running Java applications on AWS Lambda with OpenTelemetry.
 
