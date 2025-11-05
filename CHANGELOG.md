@@ -1,6 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
 ## [python-v1.38.0]
 
 ### Released 2025-11-05
