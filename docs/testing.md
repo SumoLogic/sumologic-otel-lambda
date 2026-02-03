@@ -81,6 +81,15 @@ You will need to configure [AWS credentials](https://docs.aws.amazon.com/cli/lat
     export TF_VAR_layer_arn=$(make get-dev-latest-lambda-layer-arn)
     ```
 
+## Choose Your Testing Method
+
+There are two ways to test the Lambda layer:
+
+| Method | Best For |
+|--------|----------|
+| **[Receiver-mock](#deploy-receiver-mock)** | Automated CI/CD testing, programmatic trace assertions |
+| **[Sumo Logic Endpoint](#testing-with-sumo-logic-endpoint-without-receiver-mock)** | Local development, visual debugging, quick testing |
+
 ## Deploy receiver-mock
 
 You will need to install [terraform](https://developer.hashicorp.com/terraform/downloads).
@@ -139,3 +148,86 @@ You will need to install [terraform](https://developer.hashicorp.com/terraform/d
     export LANGUAGE=java
     go test -v -run TestSpans${LANGUAGE}
     ```
+
+## Testing with Sumo Logic Endpoint (without receiver-mock)
+
+If you want to send traces directly to a Sumo Logic endpoint instead of using receiver-mock, follow these steps.
+
+### Receiver-mock vs Sumo Logic Endpoint
+
+| Aspect | Receiver-mock | Sumo Logic Endpoint |
+|--------|---------------|---------------------|
+| **Purpose** | Automated CI/CD testing | Manual/local development testing |
+| **Infrastructure** | Deploys ECS cluster, load balancer, VPC | No additional infrastructure |
+| **Setup time** | ~5-10 minutes to deploy | Immediate (just need endpoint URL) |
+| **Cost** | AWS resources (ECS, ALB, NAT Gateway) | No additional cost |
+| **Trace visibility** | Programmatic via API | Sumo Logic Traces UI |
+| **Best for** | Automated test assertions | Visual verification and debugging |
+
+**Use receiver-mock when:**
+- Running automated tests in CI/CD pipelines
+- Need programmatic access to trace data for assertions
+- Testing trace structure and attributes
+
+**Use Sumo Logic endpoint when:**
+- Developing and debugging locally
+- Visually verifying traces in the UI
+- Testing with real production-like conditions
+- Don't want to deploy additional infrastructure
+
+### Prerequisites
+
+- Sumo Logic OTLP HTTP endpoint URL
+- Complete the [Build artifacts](#build-artifacts) and [Create lambda layer](#create-lambda-layer) sections first
+
+### 1. Modify terraform configuration
+
+Edit `${DIRECTORY}/tests/deploy/providers.tf` to use local backend:
+
+```hcl
+terraform {
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+```
+
+> **Why local backend?** The default configuration uses a shared S3 backend (`lambda-tests-terraform-state-bucket`) for CI/CD pipelines. Using local backend avoids conflicts with shared state and doesn't require access to the shared S3 bucket.
+
+Edit `${DIRECTORY}/tests/deploy/main.tf` to use your Sumo Logic endpoint:
+
+```hcl
+environment_variables = {
+  AWS_LAMBDA_EXEC_WRAPPER     = "/opt/otel-handler"
+  SUMO_OTLP_HTTP_ENDPOINT_URL = "https://your-sumo-endpoint.sumologic.net/receiver/v1/otlp/YOUR_TOKEN"
+  OTEL_TRACES_SAMPLER         = "always_on"
+}
+```
+
+### 2. Deploy Lambda
+
+```bash
+cd ${DIRECTORY}/tests/deploy
+terraform init
+terraform apply --auto-approve
+```
+
+### 3. Test
+
+```bash
+# Invoke Lambda multiple times (cold start may delay initial traces)
+for i in {1..3}; do
+  curl -sS "$(terraform output -raw api-gateway-url)/$(terraform output -raw service-name)"
+  sleep 2
+done
+```
+
+### 4. View traces
+
+Check your Sumo Logic Traces UI for the traces. Search by service name or `application=lambda-tests`.
+
+### 5. Cleanup
+
+```bash
+terraform destroy --auto-approve
+```
