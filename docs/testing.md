@@ -85,10 +85,10 @@ You will need to configure [AWS credentials](https://docs.aws.amazon.com/cli/lat
 
 There are two ways to test the Lambda layer:
 
-| Method | Best For |
-|--------|----------|
-| **[Receiver-mock](#deploy-receiver-mock)** | Automated CI/CD testing, programmatic trace assertions |
-| **[Sumo Logic Endpoint](#testing-with-sumo-logic-endpoint-without-receiver-mock)** | Local development, visual debugging, quick testing |
+| Method                                                                             | Best For                                               |
+|------------------------------------------------------------------------------------|--------------------------------------------------------|
+| **[Receiver-mock](#deploy-receiver-mock)**                                         | Automated CI/CD testing, programmatic trace assertions |
+| **[Sumo Logic Endpoint](#testing-with-sumo-logic-endpoint-without-receiver-mock)** | Local development, visual debugging, quick testing     |
 
 ## Deploy receiver-mock
 
@@ -155,21 +155,23 @@ If you want to send traces directly to a Sumo Logic endpoint instead of using re
 
 ### Receiver-mock vs Sumo Logic Endpoint
 
-| Aspect | Receiver-mock | Sumo Logic Endpoint |
-|--------|---------------|---------------------|
-| **Purpose** | Automated CI/CD testing | Manual/local development testing |
-| **Infrastructure** | Deploys ECS cluster, load balancer, VPC | No additional infrastructure |
-| **Setup time** | ~5-10 minutes to deploy | Immediate (just need endpoint URL) |
-| **Cost** | AWS resources (ECS, ALB, NAT Gateway) | No additional cost |
-| **Trace visibility** | Programmatic via API | Sumo Logic Traces UI |
-| **Best for** | Automated test assertions | Visual verification and debugging |
+| Aspect               | Receiver-mock                           | Sumo Logic Endpoint                |
+|----------------------|-----------------------------------------|------------------------------------|
+| **Purpose**          | Automated CI/CD testing                 | Manual/local development testing   |
+| **Infrastructure**   | Deploys ECS cluster, load balancer, VPC | No additional infrastructure       |
+| **Setup time**       | ~5-10 minutes to deploy                 | Immediate (just need endpoint URL) |
+| **Cost**             | AWS resources (ECS, ALB, NAT Gateway)   | No additional cost                 |
+| **Trace visibility** | Programmatic via API                    | Sumo Logic Traces UI               |
+| **Best for**         | Automated test assertions               | Visual verification and debugging  |
 
 **Use receiver-mock when:**
+
 - Running automated tests in CI/CD pipelines
 - Need programmatic access to trace data for assertions
 - Testing trace structure and attributes
 
 **Use Sumo Logic endpoint when:**
+
 - Developing and debugging locally
 - Visually verifying traces in the UI
 - Testing with real production-like conditions
