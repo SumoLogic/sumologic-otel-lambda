@@ -213,6 +213,14 @@ if (logLevel === DiagLogLevel.DEBUG) {
   );
 }
 
+// Get user-configured instrumentations (if any)
+const userInstrumentations = typeof global.configureInstrumentations === "function"
+  ? global.configureInstrumentations()
+  : [];
+
+// Always include default instrumentations (HttpInstrumentation, etc.)
+const defaultInstruments = defaultConfigureInstrumentations();
+
 const instrumentations = [
   new AwsInstrumentation({
     suppressInternalInstrumentation: suppressInternalInstrumentation,
@@ -220,9 +228,8 @@ const instrumentations = [
   new AwsLambdaInstrumentation({
     disableAwsContextPropagation: disableAwsContextPropagation,
   }),
-  ...(typeof configureInstrumentations === "function"
-    ? configureInstrumentations
-    : defaultConfigureInstrumentations)(),
+  ...defaultInstruments,
+  ...userInstrumentations,
 ];
 
 // Register instrumentations synchronously to ensure code is patched even before provider is ready.
