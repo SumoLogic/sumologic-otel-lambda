@@ -85,7 +85,6 @@ function defaultConfigureInstrumentations() {
     RedisInstrumentation,
   } = require("@opentelemetry/instrumentation-redis");
   return [
-    new AwsInstrumentation(),
     new DnsInstrumentation(),
     new ExpressInstrumentation(),
     new GraphQLInstrumentation(),
@@ -157,6 +156,17 @@ function getExportersFromEnv() {
 const logLevel = diagLogLevelFromString(getStringFromEnv('OTEL_LOG_LEVEL'));
 diag.setLogger(new DiagConsoleLogger(), logLevel);
 
+// Configure suppressInternalInstrumentation for AwsInstrumentation
+let suppressInternalInstrumentation = true;
+const sumoOtelSuppressAwsInstrumentationVal =
+  process.env.SUMO_OTEL_SUPPRESS_AWS_INSTRUMENTATION;
+if (
+  sumoOtelSuppressAwsInstrumentationVal === "false" ||
+  sumoOtelSuppressAwsInstrumentationVal === "False"
+) {
+  suppressInternalInstrumentation = false;
+}
+
 // Map vendor-specific endpoint to OTel variable before exporter creation
 // Keep using localhost collector but ensure proper endpoint mapping
 if (process.env.SUMO_OTLP_HTTP_ENDPOINT_URL && !process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
@@ -197,11 +207,15 @@ if (logLevel === DiagLogLevel.DEBUG) {
     "SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION value",
     process.env.SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION
   );
+  console.log(
+    "SUMO_OTEL_SUPPRESS_AWS_INSTRUMENTATION value",
+    process.env.SUMO_OTEL_SUPPRESS_AWS_INSTRUMENTATION
+  );
 }
 
 const instrumentations = [
   new AwsInstrumentation({
-    suppressInternalInstrumentation: true,
+    suppressInternalInstrumentation: suppressInternalInstrumentation,
   }),
   new AwsLambdaInstrumentation({
     disableAwsContextPropagation: disableAwsContextPropagation,
