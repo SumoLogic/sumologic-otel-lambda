@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [nodejs-v2.0.1]
+
+### Released TBD
+
+### Changed
+
+- feat: add environment variable for suppressInternalInstrumentation [#58] 
+- fix: fix defaultInstrumentation never being registered bug [#59]
+
+
+[#58]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/58
+[#59]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/59
+
+[nodejs-v2.0.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.0.1
+
 ## [python-v1.38.0]
 
 ### Released 2025-11-05
