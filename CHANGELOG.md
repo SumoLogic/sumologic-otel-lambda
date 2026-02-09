@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [nodejs-v2.0.1]
 
-### Released TBD
+### Released 2026-02-09
 
 ### Changed
 
