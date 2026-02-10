@@ -8,9 +8,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- feat: add environment variable for suppressInternalInstrumentation [#58] 
+- feat: add environment variable for suppressInternalInstrumentation [#58]
 - fix: fix defaultInstrumentation never being registered bug [#59]
-
 
 [#58]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/58
 [#59]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/59
