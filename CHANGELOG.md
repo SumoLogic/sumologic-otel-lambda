@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [nodejs-v2.0.2]
+
+### Released 2026-02-18
+
+- fix: add missing dependency `require-in-the-middle` to nodejs lambda layer [#63]"
+
+[#63]:https://github.com/SumoLogic/sumologic-otel-lambda/pull/63
+
 ## [nodejs-v2.0.1]
 
 ### Released 2026-02-09
