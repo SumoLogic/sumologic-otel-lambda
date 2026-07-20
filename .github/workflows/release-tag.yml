@@ -89,7 +89,7 @@ jobs:
         env:
           TAG: ${{ steps.parse.outputs.tag }}
         run: |
-          git add CHANGELOG.md "changelog/${TAG}.md"
+          git add CHANGELOG.md
           git commit -m "release: ${TAG}"
           git tag -m "${TAG}" "${TAG}"
           git push --atomic origin main "${TAG}"
