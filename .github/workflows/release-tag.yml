@@ -1,0 +1,102 @@
+name: Release Tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release-tag-main
+  cancel-in-progress: false
+
+jobs:
+  create-tag:
+    if: >-
+      github.event.pull_request.merged == true &&
+      (startsWith(
+        github.event.pull_request.head.ref,
+        'prepare-java-v') ||
+      startsWith(
+        github.event.pull_request.head.ref,
+        'prepare-nodejs-v') ||
+      startsWith(
+        github.event.pull_request.head.ref,
+        'prepare-python-v'))
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Extract release details
+        id: parse
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          TAG="${BRANCH#prepare-}"
+          if ! [[ "${TAG}" =~ ^(java|nodejs|python)-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Unexpected release branch: ${BRANCH}"
+            exit 1
+          fi
+          LANGUAGE="${BASH_REMATCH[1]}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "language=${LANGUAGE}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check release state
+        id: state
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+        run: |
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists; skipping changelog assembly"
+            echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Assemble changelog fragment
+        if: steps.state.outputs.tag_exists != 'true'
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+        run: |
+          FRAGMENT="changelog/${TAG}.md"
+          if [[ ! -f "${FRAGMENT}" ]]; then
+            echo "::error::Missing changelog fragment ${FRAGMENT}"
+            exit 1
+          fi
+          if ! grep -q '^All notable changes' CHANGELOG.md; then
+            echo "::error::Could not find changelog insertion anchor"
+            exit 1
+          fi
+
+          sed -i "/^All notable changes/r ${FRAGMENT}" CHANGELOG.md
+          rm "${FRAGMENT}"
+
+      - name: Commit changelog and create tag
+        if: steps.state.outputs.tag_exists != 'true'
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+        run: |
+          git add CHANGELOG.md "changelog/${TAG}.md"
+          git commit -m "release: ${TAG}"
+          git tag -m "${TAG}" "${TAG}"
+          git push --atomic origin main "${TAG}"
+
+      - name: Dispatch release build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LANGUAGE: ${{ steps.parse.outputs.language }}
+          TAG: ${{ steps.parse.outputs.tag }}
+        run: gh workflow run "release-build-${LANGUAGE}.yml" --ref "${TAG}"

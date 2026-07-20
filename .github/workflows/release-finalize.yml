@@ -1,0 +1,80 @@
+name: Release Finalize
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Pre-release tag to finalize"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-finalize-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Extract release details
+        id: parse
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! [[ "${TAG}" =~ ^(java|nodejs|python)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::Unexpected release tag: ${TAG}"
+            exit 1
+          fi
+
+          LANGUAGE="${BASH_REMATCH[1]}"
+          VERSION="${BASH_REMATCH[2]}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "language=${LANGUAGE}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release_branch=release-${TAG}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch
+        id: branch
+        env:
+          RELEASE_BRANCH: ${{ steps.parse.outputs.release_branch }}
+        run: |
+          if git ls-remote --exit-code --heads origin "${RELEASE_BRANCH}"; then
+            echo "Release branch ${RELEASE_BRANCH} already exists"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            git checkout -b "${RELEASE_BRANCH}"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update language README title
+        if: steps.branch.outputs.exists != 'true'
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+          LANGUAGE: ${{ steps.parse.outputs.language }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: ./ci/release-finalize.sh
+
+      - name: Push release branch
+        if: steps.branch.outputs.exists != 'true'
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+          LANGUAGE: ${{ steps.parse.outputs.language }}
+          RELEASE_BRANCH: ${{ steps.parse.outputs.release_branch }}
+        run: |
+          git add "${LANGUAGE}/README.md"
+          git commit -m "docs: update ${LANGUAGE} README for ${TAG}"
+          git push origin "${RELEASE_BRANCH}"

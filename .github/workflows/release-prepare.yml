@@ -1,0 +1,182 @@
+name: Release Prepare
+
+on:
+  workflow_dispatch:
+    inputs:
+      language:
+        description: "Language to release"
+        required: true
+        type: choice
+        options:
+          - java
+          - nodejs
+          - python
+      version:
+        description: "Version (e.g. 1.41.0)"
+        required: true
+        type: string
+      otel_lambda_tag:
+        description: >-
+          opentelemetry-lambda release tag to pin the submodule to
+          (e.g. layer-python/0.19.0, layer-nodejs/0.21.0,
+          layer-javaagent/0.19.0)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-prepare-${{ inputs.language }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    env:
+      LANGUAGE: ${{ inputs.language }}
+      VERSION: ${{ inputs.version }}
+      OTEL_LAMBDA_TAG: ${{ inputs.otel_lambda_tag }}
+      BRANCH: prepare-${{ inputs.language }}-v${{ inputs.version }}
+    steps:
+      - name: Validate inputs
+        run: |
+          if ! [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must be semver without v prefix (e.g. 1.41.0)"
+            exit 1
+          fi
+
+          case "${LANGUAGE}" in
+            java) EXPECTED_PREFIX="layer-javaagent/" ;;
+            nodejs) EXPECTED_PREFIX="layer-nodejs/" ;;
+            python) EXPECTED_PREFIX="layer-python/" ;;
+            *)
+              echo "::error::Unsupported language: ${LANGUAGE}"
+              exit 1
+              ;;
+          esac
+
+          if [[ "${OTEL_LAMBDA_TAG}" != "${EXPECTED_PREFIX}"* ]]; then
+            echo "::error::${LANGUAGE} requires an upstream tag starting with ${EXPECTED_PREFIX}"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Verify upstream release tag exists
+        run: |
+          if ! git ls-remote --exit-code --tags \
+            https://github.com/open-telemetry/opentelemetry-lambda.git \
+            "refs/tags/${OTEL_LAMBDA_TAG}" >/dev/null; then
+            echo "::error::Upstream tag ${OTEL_LAMBDA_TAG} does not exist"
+            exit 1
+          fi
+
+      - name: Check release tag and branch do not already exist
+        run: |
+          TAG="${LANGUAGE}-v${VERSION}"
+          if git tag --list "${TAG}" | grep -q .; then
+            echo "::error::Tag ${TAG} already exists"
+            exit 1
+          fi
+          if git ls-remote --heads origin "${BRANCH}" | grep -q .; then
+            echo "::error::Branch ${BRANCH} already exists on remote"
+            exit 1
+          fi
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch
+        run: git checkout -b "${BRANCH}"
+
+      - name: Pin opentelemetry-lambda release
+        id: submodule
+        run: |
+          git -C opentelemetry-lambda fetch --tags origin
+          git -C opentelemetry-lambda checkout --detach "${OTEL_LAMBDA_TAG}"
+          echo "commit=$(git -C opentelemetry-lambda rev-parse HEAD)" \
+            >> "$GITHUB_OUTPUT"
+
+      - name: Run prepare script
+        run: ./ci/release-prepare.sh
+
+      - name: Commit changes
+        run: |
+          git add \
+            "changelog/${LANGUAGE}-v${VERSION}.md" \
+            "${LANGUAGE}/version.txt" \
+            "${LANGUAGE}/layer-data.sh" \
+            "${LANGUAGE}/sample-apps/template.yaml" \
+            "${LANGUAGE}/README.md" \
+            README.md \
+            opentelemetry-lambda
+          COMMIT_MSG="feat: prepare release ${LANGUAGE} v${VERSION}"
+          git commit -m "${COMMIT_MSG}"
+
+      - name: Push branch
+        run: git push origin "${BRANCH}"
+
+      - name: Ensure release label exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create release \
+            --color "0075ca" \
+            --description "Release PR" \
+            2>/dev/null || true
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          UPSTREAM_REPO="https://github.com/open-telemetry/opentelemetry-lambda"
+          gh pr create \
+            --title "feat: prepare release ${LANGUAGE} v${VERSION}" \
+            --body "$(cat <<BODY
+          Automated release preparation for \`${LANGUAGE}-v${VERSION}\`.
+
+          ### Upstream submodule reference
+
+          - **Release tag:** [\`${OTEL_LAMBDA_TAG}\`](${UPSTREAM_REPO}/releases/tag/${OTEL_LAMBDA_TAG})
+          - **Commit:** [\`${{ steps.submodule.outputs.commit }}\`](${UPSTREAM_REPO}/commit/${{ steps.submodule.outputs.commit }})
+
+          ### Changes in this PR
+
+          - \`${LANGUAGE}/version.txt\` — records the current release version and upstream release tag
+          - \`${LANGUAGE}/layer-data.sh\` — updates the layer version and release branch link
+          - \`${LANGUAGE}/sample-apps/template.yaml\` — updates the sample layer version
+          - \`${LANGUAGE}/README.md\` — updates the release version in the title
+          - \`README.md\` — updates the latest layer link and component versions detected from the pinned submodule
+          - \`opentelemetry-lambda\` — pins the selected upstream release tag and commit
+          - \`changelog/${LANGUAGE}-v${VERSION}.md\` — adds the release changelog fragment
+
+          ### Pre-merge checklist
+
+          - [ ] Replace the TODO in \`changelog/${LANGUAGE}-v${VERSION}.md\` with the release changes
+          - [ ] Verify \`${LANGUAGE}/version.txt\` metadata
+          - [ ] Verify \`${LANGUAGE}/layer-data.sh\` and \`${LANGUAGE}/sample-apps/template.yaml\`
+          - [ ] Verify the version in the title of \`${LANGUAGE}/README.md\`
+          - [ ] Verify \`README.md\` component versions and release link
+          - [ ] Verify \`opentelemetry-lambda\` points to the upstream tag and commit listed above
+          - [ ] Approve this PR
+
+          ### What happens automatically after merge
+
+          1. **Changelog assembled** — the fragment is inserted into \`CHANGELOG.md\` and deleted
+          2. **Tag created** — \`${LANGUAGE}-v${VERSION}\` is created from the assembled changelog commit
+          3. **Release build dispatched** — the matching language build workflow is started at the new tag
+          4. **Pre-release created** — artifacts are built, Lambda layers are published, and a GitHub pre-release is created
+          5. **Manual promotion** — review and promote the pre-release from the GitHub Releases page
+          BODY
+          )" \
+            --base main \
+            --head "${BRANCH}" \
+            --label release
