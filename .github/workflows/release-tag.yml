@@ -82,7 +82,7 @@ jobs:
           fi
 
           sed -i "/^All notable changes/r ${FRAGMENT}" CHANGELOG.md
-          rm "${FRAGMENT}"
+          git rm "${FRAGMENT}"
 
       - name: Commit changelog and create tag
         if: steps.state.outputs.tag_exists != 'true'
