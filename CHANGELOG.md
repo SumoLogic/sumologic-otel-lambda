@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 ## [python-v1.41.0]
+
+### Released 2026-07-22
+
 - Updated OpenTelemetry Python SDK from 1.40.0 to 1.41.0
 - Updated Instrumentation from v0.610 to v0.62b0
 - Updated OpenTelemetry Collector from v0.148.0 to v0.151.0
