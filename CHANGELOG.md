@@ -1,6 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
 ## [python-v1.41.0]
 
 ### Released 2026-07-22
