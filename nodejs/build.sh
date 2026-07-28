@@ -46,10 +46,15 @@ cp ./packages/layer/tsconfig.webpack.json ../opentelemetry-lambda/nodejs/package
 cp ./packages/layer/install-externals.sh ../opentelemetry-lambda/nodejs/packages/layer/install-externals.sh 2>/dev/null || true
 chmod +x ../opentelemetry-lambda/nodejs/packages/layer/install-externals.sh 2>/dev/null || true
 
-# Build nodejs sdk and sample apps
+# Build nodejs sdk (workaround npm/cli#5439: aws-cdk-lib hangs workspace install)
 pushd ../opentelemetry-lambda/nodejs || exit
+rm -f package-lock.json
+npm install --include-workspace-root -w packages/layer
+npm run build -w packages/layer
+popd || exit
+
+pushd ../opentelemetry-lambda/nodejs/sample-apps/aws-sdk || exit
 npm install
-# Build all packages including sample apps with lerna
 npm run build
 popd || exit
 

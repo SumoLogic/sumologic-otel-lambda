@@ -1,0 +1,161 @@
+name: Check Upstream Releases
+
+on:
+  schedule:
+    - cron: '7 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "If true, detect releases but don't trigger prepare workflow"
+        required: false
+        type: boolean
+        default: true
+      language:
+        description: "Only check this language (leave empty to check all)"
+        required: false
+        type: choice
+        options:
+          - ''
+          - java
+          - nodejs
+          - python
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: read
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for new upstream releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          FILTER_LANGUAGE: ${{ inputs.language || '' }}
+        run: |
+          set -euo pipefail
+
+          UPSTREAM="https://github.com/open-telemetry/opentelemetry-lambda.git"
+
+          declare -A TAG_PREFIX=(
+            [java]="layer-javaagent"
+            [nodejs]="layer-nodejs"
+            [python]="layer-python"
+          )
+
+          semver_gt() {
+            local lhs="$1" rhs="$2"
+            if [[ "${lhs}" == "${rhs}" ]]; then
+              return 1
+            fi
+            local IFS='.'
+            read -ra L <<< "${lhs}"
+            read -ra R <<< "${rhs}"
+            for i in 0 1 2; do
+              if (( ${L[$i]:-0} > ${R[$i]:-0} )); then
+                return 0
+              elif (( ${L[$i]:-0} < ${R[$i]:-0} )); then
+                return 1
+              fi
+            done
+            return 1
+          }
+
+          minor_bump() {
+            local ver="$1"
+            local IFS='.'
+            read -ra parts <<< "${ver}"
+            echo "${parts[0]}.$(( parts[1] + 1 )).0"
+          }
+
+          latest_upstream_tag() {
+            local prefix="$1"
+            git ls-remote --tags "${UPSTREAM}" "refs/tags/${prefix}/*" \
+              | sed 's|.*refs/tags/||' \
+              | grep -v '\^{}' \
+              | sort -t/ -k2 -V \
+              | tail -1
+          }
+
+          TRIGGERED=()
+
+          LANGUAGES=(java nodejs python)
+          if [[ -n "${FILTER_LANGUAGE}" ]]; then
+            LANGUAGES=("${FILTER_LANGUAGE}")
+          fi
+
+          for LANGUAGE in "${LANGUAGES[@]}"; do
+            PREFIX="${TAG_PREFIX[${LANGUAGE}]}"
+
+            echo "--- Checking ${LANGUAGE} (prefix: ${PREFIX}) ---"
+
+            LATEST_UPSTREAM=$(latest_upstream_tag "${PREFIX}")
+            if [[ -z "${LATEST_UPSTREAM}" ]]; then
+              echo "WARNING: No upstream tags found for ${PREFIX}"
+              continue
+            fi
+            echo "Latest upstream: ${LATEST_UPSTREAM}"
+
+            VERSION_FILE="${LANGUAGE}/version.txt"
+            CURRENT_VER=$(grep '^current_version=' "${VERSION_FILE}" | cut -d= -f2-)
+            LAST_PROCESSED=$(grep '^upstream_release_tag=' "${VERSION_FILE}" | cut -d= -f2-)
+            echo "Current version: ${CURRENT_VER}"
+            echo "Last processed upstream: ${LAST_PROCESSED}"
+
+            if [[ -z "${CURRENT_VER}" || -z "${LAST_PROCESSED}" ]]; then
+              echo "ERROR: could not read named values from ${VERSION_FILE}"
+              continue
+            fi
+
+            if [[ "${LATEST_UPSTREAM}" == "${LAST_PROCESSED}" ]]; then
+              echo "No new release for ${LANGUAGE}"
+              continue
+            fi
+
+            UPSTREAM_VER="${LATEST_UPSTREAM#"${PREFIX}/"}"
+            PROCESSED_VER="${LAST_PROCESSED#"${PREFIX}/"}"
+            if ! semver_gt "${UPSTREAM_VER}" "${PROCESSED_VER}"; then
+              echo "Upstream ${UPSTREAM_VER} is not newer than ${PROCESSED_VER}"
+              continue
+            fi
+
+            echo "New release detected: ${LATEST_UPSTREAM} > ${LAST_PROCESSED}"
+
+            EXISTING_PR=$(gh pr list \
+              --state open \
+              --base main \
+              --json number,headRefName \
+              --jq "map(select(.headRefName | startswith(\"prepare-${LANGUAGE}-v\")))[0].number // empty")
+            if [[ -n "${EXISTING_PR}" ]]; then
+              echo "Skipping ${LANGUAGE}: open prepare PR #${EXISTING_PR} exists"
+              continue
+            fi
+
+            NEXT_VER=$(minor_bump "${CURRENT_VER}")
+            echo "Version bump: ${CURRENT_VER} -> ${NEXT_VER}"
+
+            if [[ "${DRY_RUN}" == "true" ]]; then
+              echo "[DRY RUN] Would trigger release-prepare for ${LANGUAGE} v${NEXT_VER} with tag ${LATEST_UPSTREAM}"
+              continue
+            fi
+
+            echo "Triggering release-prepare for ${LANGUAGE} v${NEXT_VER}"
+            gh workflow run release-prepare.yml \
+              -f language="${LANGUAGE}" \
+              -f version="${NEXT_VER}" \
+              -f otel_lambda_tag="${LATEST_UPSTREAM}"
+            TRIGGERED+=("${LANGUAGE}-v${NEXT_VER}")
+          done
+
+          if [[ ${#TRIGGERED[@]} -gt 0 ]]; then
+            echo ""
+            echo "=== Triggered releases ==="
+            printf '  %s\n' "${TRIGGERED[@]}"
+          else
+            echo ""
+            echo "=== No release workflows triggered ==="
+          fi

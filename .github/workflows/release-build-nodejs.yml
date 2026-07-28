@@ -4,9 +4,21 @@ on:
   push:
     tags:
       - 'nodejs-v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
 
 jobs:
+  validate-ref:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Ensure ref is a release tag
+        run: |
+          if ! [[ "${GITHUB_REF_NAME}" =~ ^nodejs-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::This workflow must be dispatched from a release tag (nodejs-vX.Y.Z), not '${GITHUB_REF_NAME}'"
+            exit 1
+          fi
+
   build-release-artifacts:
+    needs: validate-ref
     uses: ./.github/workflows/build-artifacts.yml
     with:
       BUILD_COMMAND: make build-nodejs
