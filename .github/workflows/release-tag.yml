@@ -95,6 +95,7 @@ jobs:
           git push --atomic origin main "${TAG}"
 
       - name: Dispatch release build
+        if: steps.state.outputs.tag_exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           LANGUAGE: ${{ steps.parse.outputs.language }}
