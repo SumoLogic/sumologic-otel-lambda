@@ -27,7 +27,7 @@ jobs:
       receivermockendpoint: ${{ steps.get-receiver-mock-endpoint.outputs.endpoint }}
     env:
       BUCKET_NAME: lambda-tests-terraform-state-bucket
-      BUCKET_KEY: receivermock.${{ matrix.architecture}}.${{ inputs.LANGUAGE }}/terraform_state.tfstate
+      BUCKET_KEY: receivermock.${{ github.run_id }}.${{ inputs.LANGUAGE }}/terraform_state.tfstate
       LANGUAGE: ${{ inputs.LANGUAGE }}
       TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
     steps:
@@ -40,11 +40,6 @@ jobs:
           role-to-assume: ${{ env.AWS_OPENID_ROLE_ARN }}
           aws-region: ${{ matrix.aws_region }}
           mask-aws-account-id: false
-      - name: Cache terraform working directory
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.TERRAFORM_DIRECTORY }}
-          key: ${{ inputs.LANGUAGE }}-${{ github.run_id }}
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
@@ -61,7 +56,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_app_name: lambda-layers-${{ inputs.LANGUAGE }}
+          TF_VAR_app_name: ll-${{ inputs.LANGUAGE }}-${{ github.run_id }}
       - name: Wait for task container to be ready
         run: sleep 30
       - name: Get receiver-mock endpoint
@@ -69,7 +64,7 @@ jobs:
         run: echo "endpoint=$(terraform output -raw loadbalancer_ip)" >> $GITHUB_OUTPUT
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_app_name: lambda-layers-${{ inputs.LANGUAGE }}
+          TF_VAR_app_name: ll-${{ inputs.LANGUAGE }}-${{ github.run_id }}
   run-tests:
     name: Run tests
     runs-on: ubuntu-22.04
@@ -83,7 +78,7 @@ jobs:
         aws_region: [ eu-central-1 ]
     env:
       BUCKET_NAME: lambda-tests-terraform-state-bucket
-      BUCKET_KEY: ${{ matrix.architecture}}.${{ inputs.LANGUAGE }}/terraform_state.tfstate
+      BUCKET_KEY: ${{ matrix.architecture}}.${{ inputs.LANGUAGE }}.${{ github.run_id }}/terraform_state.tfstate
       LANGUAGE: ${{ inputs.LANGUAGE }}
       TERRAFORM_DIRECTORY: ${{ inputs.LANGUAGE }}/tests/deploy
     steps:
@@ -170,7 +165,7 @@ jobs:
           cd tests/lambdalayer
           go test -v -run TestSpans${{ env.LANGUAGE }}
       - name: Cleanup AWS environment
-        if: success()
+        if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
@@ -190,6 +185,8 @@ jobs:
       matrix:
         aws_region: [ eu-central-1 ]
     env:
+      BUCKET_NAME: lambda-tests-terraform-state-bucket
+      BUCKET_KEY: receivermock.${{ github.run_id }}.${{ inputs.LANGUAGE }}/terraform_state.tfstate
       TERRAFORM_DIRECTORY: utils/receiver-mock/deploy
     steps:
       - uses: actions/checkout@v4
@@ -204,13 +201,17 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
-      - name: Cache terraform working directory
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.TERRAFORM_DIRECTORY }}
-          key: ${{ inputs.LANGUAGE }}-${{ github.run_id }}
+      - name: Initialize terraform
+        run: |
+          terraform init \
+          --backend-config "bucket=${{ env.BUCKET_NAME }}" \
+          --backend-config "key=${{ env.BUCKET_KEY }}" \
+          --backend-config "region=${{ matrix.aws_region }}" \
+          --backend-config "encrypt=true" \
+          --backend-config "dynamodb_table=SumoOtelLambdaTfStateLock"
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
       - name: Destroy terraform
         run: terraform destroy -auto-approve
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
         env:
-          TF_VAR_app_name: lambda-layers-${{ inputs.LANGUAGE }}
+          TF_VAR_app_name: ll-${{ inputs.LANGUAGE }}-${{ github.run_id }}
