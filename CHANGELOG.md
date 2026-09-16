@@ -41,7 +41,7 @@ All notable changes to this project will be documented in this file.
 
 - fix: add missing dependency `require-in-the-middle` to nodejs lambda layer [#63]"
 
-[#63]:https://github.com/SumoLogic/sumologic-otel-lambda/pull/63
+[#63]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/63
 
 ## [nodejs-v2.0.1]
 
@@ -54,7 +54,6 @@ All notable changes to this project will be documented in this file.
 
 [#58]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/58
 [#59]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/59
-
 [nodejs-v2.0.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.0.1
 
 ## [python-v1.38.0]
