@@ -11,6 +11,9 @@
     "ignorePatterns": [
       {
         "pattern": "^https://mikefarah.gitbook.io/yq"
+      },
+      {
+        "pattern": "https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/"
       }
     ]
   }
