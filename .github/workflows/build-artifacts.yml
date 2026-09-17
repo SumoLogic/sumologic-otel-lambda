@@ -90,6 +90,7 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
           path: ${{ env.LANGUAGE }}/${{ env.ARTIFACT_ARCHIVE_BASE_NAME }}-${{ matrix.architecture }}.zip
           if-no-files-found: error
+          overwrite: true
       - name: Rename sample-app java artifact
         if: env.LANGUAGE == 'java' && success()
         run: |
@@ -102,6 +103,7 @@ jobs:
           name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
           path: opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/libs/java-sample-app.jar
           if-no-files-found: error
+          overwrite: true
       - name: Upload artifacts - nodejs
         if: env.LANGUAGE == 'nodejs' && success()
         uses: actions/upload-artifact@v4
@@ -109,6 +111,7 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
           path: ${{ env.LANGUAGE }}/${{ env.ARTIFACT_ARCHIVE_BASE_NAME }}-${{ matrix.architecture }}.zip
           if-no-files-found: error
+          overwrite: true
       - name: Rename sample-app nodejs artifact
         if: env.LANGUAGE == 'nodejs' && success()
         run: |
@@ -121,6 +124,7 @@ jobs:
           name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
           path: opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/aws-sdk/build/nodejs-sample-app.zip
           if-no-files-found: error
+          overwrite: true
       - name: Upload artifacts - python layer
         if: env.LANGUAGE == 'python' && success()
         uses: actions/upload-artifact@v4
@@ -128,6 +132,7 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
           path: ${{ env.LANGUAGE }}/${{ env.ARTIFACT_ARCHIVE_BASE_NAME }}-${{ matrix.architecture }}.zip
           if-no-files-found: error
+          overwrite: true
       - name: Rename sample-app python artifact
         if: env.LANGUAGE == 'python' && success()
         run: |
@@ -140,3 +145,4 @@ jobs:
           name: sample-app-${{ env.LANGUAGE }}-${{ matrix.architecture }}-artifacts
           path: opentelemetry-lambda/${{ env.LANGUAGE }}/sample-apps/build/python-sample-app.zip
           if-no-files-found: error
+          overwrite: true
