@@ -17,14 +17,14 @@ jobs:
       BUILD_COMMAND: make build-nodejs
       LANGUAGE: nodejs
       ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-nodejs
-      ARTIFACT_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
+      ARTIFACT_NAME: ${{ github.run_id }}
 
   create-dev-lambda-layer:
     needs: build-artifacts
     uses: ./.github/workflows/publish-dev-layer.yml
     with:
       ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-nodejs
-      ARTIFACT_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
+      ARTIFACT_NAME: ${{ github.run_id }}
       LANGUAGE: nodejs
 
   run-tests:
