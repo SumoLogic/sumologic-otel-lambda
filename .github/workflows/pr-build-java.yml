@@ -37,7 +37,7 @@ jobs:
       BUILD_COMMAND: make build-java
       LANGUAGE: java
       ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-java-wrapper
-      ARTIFACT_NAME: ${{ github.head_ref }}
+      ARTIFACT_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
 
   create-dev-lambda-layer:
     needs: [changes, build-artifacts]
@@ -45,7 +45,7 @@ jobs:
     uses: ./.github/workflows/publish-dev-layer.yml
     with:
       ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-java-wrapper
-      ARTIFACT_NAME: ${{ github.head_ref }}
+      ARTIFACT_NAME: ${{ github.run_id }}-${{ github.run_attempt }}
       LANGUAGE: java
 
   run-tests:
