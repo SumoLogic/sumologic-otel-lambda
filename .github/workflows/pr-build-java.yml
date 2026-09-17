@@ -1,17 +1,37 @@
 name: Pull Request Build - Java
 
+# This workflow has no `on.pull_request.paths` filter on purpose. A workflow
+# skipped by path filtering reports no check run at all, which leaves a required
+# status check pending forever. Gating happens in the `changes` job instead, and
+# `pr-build-java-complete` always reports.
 on:
   pull_request:
-    paths:
-      - 'java/**'
-      - 'opentelemetry-lambda/**'
-      - '.github/workflows/*-java.yml'
-      - '.github/workflows/tests.yml'
-      - '!java/sample-apps/template.yaml'
-      - '!**/*.md'
 
 jobs:
+  changes:
+    runs-on: ubuntu-22.04
+    outputs:
+      any_changed: ${{ steps.changed-files.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if Java related files changed
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            java/**
+            opentelemetry-lambda/**
+            .github/workflows/*-java.yml
+            .github/workflows/tests.yml
+          files_ignore: |
+            java/sample-apps/template.yaml
+            **/*.md
+
   build-artifacts:
+    needs: changes
+    if: needs.changes.outputs.any_changed == 'true'
     uses: ./.github/workflows/build-artifacts.yml
     with:
       BUILD_COMMAND: make build-java
@@ -20,7 +40,8 @@ jobs:
       ARTIFACT_NAME: ${{ github.head_ref }}
 
   create-dev-lambda-layer:
-    needs: build-artifacts
+    needs: [changes, build-artifacts]
+    if: needs.changes.outputs.any_changed == 'true'
     uses: ./.github/workflows/publish-dev-layer.yml
     with:
       ARTIFACT_ARCHIVE_BASE_NAME: opentelemetry-java-wrapper
@@ -28,9 +49,21 @@ jobs:
       LANGUAGE: java
 
   run-tests:
-    needs: create-dev-lambda-layer
+    needs: [changes, create-dev-lambda-layer]
+    if: needs.changes.outputs.any_changed == 'true'
     uses: ./.github/workflows/tests.yml
     with:
       LANGUAGE: java
       LAYER_ARN_AMD64: ${{ needs.create-dev-lambda-layer.outputs.lambdalayeramd64 }}
       LAYER_ARN_ARM64: ${{ needs.create-dev-lambda-layer.outputs.lambdalayerarm64 }}
+
+  pr-build-java-complete:
+    runs-on: ubuntu-22.04
+    needs: [changes, build-artifacts, create-dev-lambda-layer, run-tests]
+    if: always()
+    steps:
+      - name: Fail if any job did not pass
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "At least one Java build job failed or was cancelled."
+          exit 1

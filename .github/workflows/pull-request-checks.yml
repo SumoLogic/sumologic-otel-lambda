@@ -31,25 +31,23 @@ jobs:
   markdownlint:
     runs-on: ubuntu-22.04
     needs: [docs-changed]
+    if: needs.docs-changed.outputs.any_changed == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: install markdownlint
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: npm install -g markdownlint-cli
       - name: markdownlint check
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: make markdown-lint
 
   yamllint:
     runs-on: ubuntu-22.04
     needs: [docs-changed]
+    if: needs.docs-changed.outputs.any_changed == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: install yamllint
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: pip install yamllint
       - name: yamllint
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: make yaml-lint
 
   markdown-link-check:
@@ -68,24 +66,23 @@ jobs:
   md-links-lint:
     runs-on: ubuntu-22.04
     needs: [docs-changed]
+    if: needs.docs-changed.outputs.any_changed == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Lint markdown links
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: |
           make markdown-links-lint
+
   markdown-table-formatter-check:
     runs-on: ubuntu-22.04
     needs: [docs-changed]
+    if: needs.docs-changed.outputs.any_changed == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        if: needs.docs-changed.outputs.any_changed == 'true'
       - name: Install markdown-table-formatter
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: npm install markdown-table-formatter --save
       - name: Run markdown-table-formatter
-        if: needs.docs-changed.outputs.any_changed == 'true'
         run: CMD=./node_modules/.bin/markdown-table-formatter make markdown-table-formatter-check
 
   terraform-lint:
@@ -114,3 +111,24 @@ jobs:
         uses: dflook/terraform-fmt@v1
         with:
           path: utils/receiver-mock/deploy
+
+  # Single required status check for this workflow. A job skipped by a job-level
+  # `if` reports a `skipped` conclusion that branch protection accepts, so this
+  # stays green when no relevant files changed but fails if any check failed.
+  pr-checks-complete:
+    runs-on: ubuntu-22.04
+    needs:
+      - docs-changed
+      - markdownlint
+      - yamllint
+      - markdown-link-check
+      - md-links-lint
+      - markdown-table-formatter-check
+      - terraform-lint
+    if: always()
+    steps:
+      - name: Fail if any check did not pass
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "At least one PR check failed or was cancelled."
+          exit 1
