@@ -43,10 +43,18 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "language=${LANGUAGE}" >> "$GITHUB_OUTPUT"
 
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Configure git
         run: |
@@ -94,10 +102,10 @@ jobs:
           git tag -m "${TAG}" "${TAG}"
           git push --atomic origin main "${TAG}"
 
-      - name: Dispatch release build
-        if: steps.state.outputs.tag_exists != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          LANGUAGE: ${{ steps.parse.outputs.language }}
-          TAG: ${{ steps.parse.outputs.tag }}
-        run: gh workflow run "release-build-${LANGUAGE}.yml" --ref "${TAG}"
+#      - name: Dispatch release build
+#        if: steps.state.outputs.tag_exists != 'true'
+#        env:
+#          GH_TOKEN: ${{ github.token }}
+#          LANGUAGE: ${{ steps.parse.outputs.language }}
+#          TAG: ${{ steps.parse.outputs.tag }}
+#        run: gh workflow run "release-build-${LANGUAGE}.yml" --ref "${TAG}"
