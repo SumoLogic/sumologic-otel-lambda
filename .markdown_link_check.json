@@ -14,6 +14,9 @@
       },
       {
         "pattern": "^https://github\\.com/SumoLogic/sumologic-otel-lambda/releases/tag/"
+      },
+      {
+        "pattern": "^https://github\\.com/SumoLogic/sumologic-otel-lambda/blob/release-"
       }
     ]
   }
