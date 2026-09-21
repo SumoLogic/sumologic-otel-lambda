@@ -76,5 +76,7 @@ jobs:
           RELEASE_BRANCH: ${{ steps.parse.outputs.release_branch }}
         run: |
           git add "${LANGUAGE}/README.md"
-          git commit -m "docs: update ${LANGUAGE} README for ${TAG}"
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: update ${LANGUAGE} README for ${TAG}"
+          fi
           git push origin "${RELEASE_BRANCH}"
