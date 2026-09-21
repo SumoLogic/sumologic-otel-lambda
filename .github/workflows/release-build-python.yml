@@ -126,7 +126,6 @@ jobs:
             ${{ env.ARM64_LAYERS }}
 
             ## Lambda Container dependencies:
-            
             - [amd64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/${{ github.ref_name }}/opentelemetry-python-amd64.zip)
             - [arm64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/${{ github.ref_name }}/opentelemetry-python-arm64.zip)
 
