@@ -33,11 +33,11 @@ jobs:
         aws_region: [ eu-central-1 ]
     env:
       LANGUAGE: ${{ inputs.LANGUAGE }}
-      LAYER_NAME: sumologic-otel-lambda-dev-${{ inputs.LANGUAGE }}-${{ matrix.architecture }}-${{ github.run_id }}
+      LAYER_NAME: sumologic-otel-lambda-dev-${{ inputs.LANGUAGE }}-${{ matrix.architecture }}-${{ github.run_id }}-${{ github.run_attempt }}
       ARCHITECTURE: ${{ matrix.architecture }}
       ARTIFACT_ARCHIVE_BASE_NAME: ${{ inputs.ARTIFACT_ARCHIVE_BASE_NAME }}
       ARTIFACT_NAME: ${{ inputs.ARTIFACT_NAME }}
-      BUCKET_NAME: sumologic-otel-lambda-dev-${{ github.run_id }}-${{ matrix.architecture }}
+      BUCKET_NAME: sumologic-otel-lambda-dev-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.architecture }}
       BUCKET_KEY: layer-${{ matrix.architecture }}-${{ matrix.aws_region }}-.zip
       DIRECTORY: ${{ inputs.LANGUAGE }}
       REGION: ${{ matrix.aws_region }}

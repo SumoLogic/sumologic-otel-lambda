@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [java-v2.20.0]
+
+### Released 2026-09-21
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[java-v2.20.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.20.0
+
+## [nodejs-v2.1.0]
+
+### Released 2026-09-16
+
+### Changed
+
+- chore: upgrade to OpenTelemetry JavaScript SDK 2.10.0
+- chore: update open telemetry collector to 0.157.0
+
+- [nodejs-v2.1.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.1.0
+
+## [python-v1.41.0]
+
+### Released 2026-07-22
+
+- Updated OpenTelemetry Python SDK from 1.40.0 to 1.41.0
+- Updated Instrumentation from v0.610 to v0.62b0
+- Updated OpenTelemetry Collector from v0.148.0 to v0.151.0
+
+[python-v1.41.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.41.0
+
 ## [python-v1.40.0]
 
 ### Released 2026-04-09
@@ -20,7 +51,7 @@ All notable changes to this project will be documented in this file.
 
 - fix: add missing dependency `require-in-the-middle` to nodejs lambda layer [#63]"
 
-[#63]:https://github.com/SumoLogic/sumologic-otel-lambda/pull/63
+[#63]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/63
 
 ## [nodejs-v2.0.1]
 
@@ -33,7 +64,6 @@ All notable changes to this project will be documented in this file.
 
 [#58]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/58
 [#59]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/59
-
 [nodejs-v2.0.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.0.1
 
 ## [python-v1.38.0]
