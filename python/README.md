@@ -1,4 +1,4 @@
-# Sumo Logic Distribution for OpenTelemetry Python Lambda Layer 1.41 version
+# Sumo Logic Distribution for OpenTelemetry Python Lambda Layer v1.41.0
 
 Sumo Logic lambda layers support:
 
@@ -49,8 +49,8 @@ Sumo Logic lambda layers support:
 
 ## Lambda Container dependencies
 
-- [amd64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.40.0/opentelemetry-python-amd64.zip)
-- [arm64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.40.0/opentelemetry-python-arm64.zip)
+- [amd64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.41.0/opentelemetry-python-amd64.zip)
+- [arm64 containers](https://github.com/SumoLogic/sumologic-otel-lambda/releases/download/python-v1.41.0/opentelemetry-python-arm64.zip)
 
 ## Sample applications
 
