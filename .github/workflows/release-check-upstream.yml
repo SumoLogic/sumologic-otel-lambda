@@ -82,6 +82,7 @@ jobs:
           }
 
           TRIGGERED=()
+          FAILED=()
 
           LANGUAGES=(java nodejs python)
           if [[ -n "${FILTER_LANGUAGE}" ]]; then
@@ -138,6 +139,15 @@ jobs:
             NEXT_VER=$(minor_bump "${CURRENT_VER}")
             echo "Version bump: ${CURRENT_VER} -> ${NEXT_VER}"
 
+            # Release Prepare stops when the tag exists. Fail here, so that
+            # the problem is visible in this run.
+            if git ls-remote --exit-code --tags origin \
+              "refs/tags/${LANGUAGE}-v${NEXT_VER}" >/dev/null; then
+              echo "::error::Tag ${LANGUAGE}-v${NEXT_VER} already exists. Update ${VERSION_FILE}."
+              FAILED+=("${LANGUAGE}")
+              continue
+            fi
+
             if [[ "${DRY_RUN}" == "true" ]]; then
               echo "[DRY RUN] Would trigger release-prepare for ${LANGUAGE} v${NEXT_VER} with tag ${LATEST_UPSTREAM}"
               continue
@@ -158,4 +168,9 @@ jobs:
           else
             echo ""
             echo "=== No release workflows triggered ==="
+          fi
+
+          if [[ ${#FAILED[@]} -gt 0 ]]; then
+            echo "::error::Check failed for: ${FAILED[*]}"
+            exit 1
           fi

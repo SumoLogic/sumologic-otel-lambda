@@ -21,6 +21,9 @@ jobs:
       id-token: write
       contents: read
     strategy:
+      # One failed region must not cancel the other regions. Re-run only the
+      # failed jobs, so that regions which passed do not publish a new version.
+      fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
         aws_region: [ us-east-1, us-east-2, us-west-1, us-west-2, af-south-1, ap-east-1, ap-south-1, ap-northeast-3,

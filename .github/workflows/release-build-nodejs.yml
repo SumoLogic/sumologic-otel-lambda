@@ -39,9 +39,29 @@ jobs:
     name: Create Release
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: CHANGELOG.md
+          sparse-checkout-cone-mode: false
       - name: Extract tag
         id: extract_tag
-        run: echo "::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/nodejs-v})"
+        run: echo "tag=${GITHUB_REF#refs/tags/nodejs-v}" >> "$GITHUB_OUTPUT"
+      - name: Extract changelog
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # Print the CHANGELOG.md section for this tag, without the link line.
+          NOTES=$(awk -v tag="${TAG}" '
+            $0 == "## [" tag "]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found && index($0, "[" tag "]:") == 0 { print }
+          ' CHANGELOG.md)
+          if [[ -z "${NOTES//[[:space:]]/}" ]]; then
+            NOTES="See [CHANGELOG.md](https://github.com/SumoLogic/sumologic-otel-lambda/blob/${TAG}/CHANGELOG.md)."
+          fi
+          echo "CHANGELOG<<CHANGELOG_EOF" >> "$GITHUB_ENV"
+          echo "${NOTES}" >> "$GITHUB_ENV"
+          echo "CHANGELOG_EOF" >> "$GITHUB_ENV"
       - name: Download amd64 layer artifacts
         uses: actions/download-artifact@v4
         with:
@@ -115,9 +135,10 @@ jobs:
             ## Sumo Logic OTel NodeJS AWS Lambda Layer version: ${{ steps.extract_tag.outputs.tag }}
 
             ## Changelog
-            **TODO**
 
-            For more details please see [README.md](https://github.com/SumoLogic-Labs/sumo-opentelemetry-lambda/tree/release-${{ github.ref_name }})
+            ${{ env.CHANGELOG }}
+
+            For more details please see [README.md](https://github.com/SumoLogic/sumologic-otel-lambda/blob/release-${{ github.ref_name }}/nodejs/README.md)
 
             ## Lambda Function Layers:
 
@@ -132,3 +153,49 @@ jobs:
           artifacts: "artifacts/opentelemetry-nodejs-amd64.zip,artifacts/opentelemetry-nodejs-arm64.zip,artifacts/nodejs-sample-app.zip"
           artifactErrorsFailBuild: true
           replacesArtifacts: true
+
+  create-release-branch:
+    needs: create-release
+    name: Create Release Branch
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_PRIVATE_KEY }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+      - name: Download Layer ARNs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ github.ref_name }}-nodejs-*-layer-arns-artifact-*
+          merge-multiple: true
+          path: layerarns/
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "github-actions[bot]@users.noreply.github.com"
+      # Pushes to an existing release branch are restricted. If the branch
+      # exists, fix it by hand or with release-finalize.yml.
+      - name: Create release branch
+        env:
+          TAG: ${{ github.ref_name }}
+          LANGUAGE: nodejs
+        run: |
+          RELEASE_BRANCH="release-${TAG}"
+          if git ls-remote --exit-code --heads origin "${RELEASE_BRANCH}" >/dev/null; then
+            echo "::error::Branch ${RELEASE_BRANCH} already exists"
+            exit 1
+          fi
+          git checkout -b "${RELEASE_BRANCH}"
+          cat layerarns/* > layer-arns.txt
+          VERSION="${TAG#"${LANGUAGE}-v"}" ARNS_FILE=layer-arns.txt \
+            ./ci/release-finalize.sh
+          git add "${LANGUAGE}/README.md"
+          git commit -m "docs: update ${LANGUAGE} README for ${TAG}"
+          git push origin "${RELEASE_BRANCH}"

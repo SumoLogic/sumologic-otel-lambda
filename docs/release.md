@@ -41,7 +41,7 @@ release.
 
 The workflow opens `prepare-<language>-v<version>` with these changes:
 
-- `changelog/<language>-v<version>.md`
+- `CHANGELOG.md` (a new section for the release)
 - `<language>/version.txt`
 - `<language>/layer-data.sh`
 - `<language>/sample-apps/template.yaml`
@@ -49,10 +49,12 @@ The workflow opens `prepare-<language>-v<version>` with these changes:
 - root `README.md`
 - `opentelemetry-lambda` gitlink
 
-The changelog fragment prevents concurrent release preparations from editing
-`CHANGELOG.md`. Before merging the pull request:
+The workflow uses the GitHub App token to push the branch and open the pull
+request, so the pull request checks start without manual approval.
 
-1. Replace the fragment's TODO with the release changes.
+Before merging the pull request:
+
+1. Replace the TODO in the new `CHANGELOG.md` section with the release changes.
 2. Verify the named values in `<language>/version.txt`.
 3. Verify the layer version in `<language>/layer-data.sh`.
 4. Verify the layer version in `<language>/sample-apps/template.yaml`.
@@ -60,31 +62,30 @@ The changelog fragment prevents concurrent release preparations from editing
 6. Verify the root README release link and component versions.
 7. Verify that `opentelemetry-lambda` points to the upstream tag and commit SHA
    listed in the pull request.
-8. Resolve any normal pull-request conflict, including the shared root README
-   or submodule gitlink conflicts caused by another release merged first. Keep
-   the upstream pin selected for the pull request being merged, then recheck the
-   generated component versions.
+8. Resolve any normal pull-request conflict. When another release was merged
+   first, `CHANGELOG.md`, the root README and the submodule gitlink can
+   conflict. Keep both changelog sections. Keep the upstream pin selected for
+   the pull request being merged, then recheck the generated component
+   versions.
 
 Only one open prepare pull request is allowed per language. An open Java
-prepare pull request does not block NodeJS or Python preparation. Concurrent
-language releases may point the shared submodule at different commits, so the
-later pull request may require conflict resolution before merge.
+prepare pull request does not block NodeJS or Python preparation.
 
 ## Automatic post-merge flow
 
-Merging a prepare pull request triggers the following sequence:
+No workflow pushes to `main`. Merging a prepare pull request triggers the
+following sequence:
 
-1. `Release Tag` serializes changes to `main` across all languages.
-2. It inserts `changelog/<language>-v<version>.md` at the top of
-   `CHANGELOG.md` and deletes the fragment.
-3. It commits the assembled changelog and creates
-   `<language>-v<version>` at that commit.
-4. It atomically pushes `main` and the release tag, then explicitly dispatches
-   the matching `release-build-<language>.yml` workflow at that tag. Explicit
-   dispatch is required because tag pushes made with `GITHUB_TOKEN` do not
-   start downstream push-triggered workflows.
-5. The release-build workflow creates artifacts, publishes Lambda layers, and
-   creates a GitHub pre-release containing the ARN tables and release artifacts.
+1. `Release Tag` checks that `CHANGELOG.md` has a section for the release.
+2. It creates `<language>-v<version>` at the merge commit and pushes only the
+   tag, with the GitHub App token. Tag pushes made with the app token start
+   `release-build-<language>.yml`. Tag pushes made with `GITHUB_TOKEN` do not.
+3. The release-build workflow creates artifacts and publishes Lambda layers.
+4. It creates a GitHub pre-release. The body contains the `CHANGELOG.md`
+   section of the tag, the ARN tables and the container links.
+5. It creates `release-<language>-v<version>` from the tag. In
+   `<language>/README.md` it sets the version title, the ARN tables and the
+   container links.
 6. Review the pre-release. The GitHub release remains a pre-release.
 7. When ready to publish, open the pre-release on the GitHub Releases page,
    edit it, clear the pre-release setting, mark it as the latest release, and
@@ -96,10 +97,18 @@ Final promotion is a manual GitHub UI step.
 
 - If preparation fails, correct the input or workflow issue and dispatch
   `Release Prepare` again.
-- If changelog assembly fails, restore or correct the expected fragment or the
-  `All notable changes` anchor before rerunning the merge-triggered workflow.
+- If `Check Upstream Releases` fails with `Tag ... already exists`, the named
+  values in `<language>/version.txt` are older than the latest release. Set them
+  to the latest release and its upstream tag.
+- If `Release Tag` fails because `CHANGELOG.md` has no section for the release,
+  add the section to `main` in a pull request. Then push the tag by hand from
+  the merge commit of the prepare pull request.
 - If a tag exists but its build did not start or must be retried, dispatch the
   matching `release-build-<language>.yml` workflow with the existing release
   tag as its ref.
+- If the release branch was not created, dispatch `Release Finalize` with the
+  release tag. It reads the ARNs from the GitHub release. Pushes to an existing
+  release branch are restricted, so delete a wrong branch first (repository
+  admin).
 
 Do not promote the pre-release before its contents have been reviewed.

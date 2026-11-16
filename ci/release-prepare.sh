@@ -25,10 +25,20 @@ if [[ -z "${OLD_VERSION_DASHED}" ]]; then
   exit 1
 fi
 
-# --- Create changelog fragment (avoids CHANGELOG.md merge conflicts) ---
+# --- Add changelog section to CHANGELOG.md ---
 
-mkdir -p changelog
-cat > "changelog/${TAG}.md" <<EOF
+if grep -qxF "## [${TAG}]" CHANGELOG.md; then
+  echo "ERROR: CHANGELOG.md already has a section for ${TAG}" >&2
+  exit 1
+fi
+if ! grep -q '^All notable changes' CHANGELOG.md; then
+  echo "ERROR: could not find changelog insertion anchor in CHANGELOG.md" >&2
+  exit 1
+fi
+
+CHANGELOG_SECTION="$(mktemp)"
+cat > "${CHANGELOG_SECTION}" <<EOF
+
 ## [${TAG}]
 
 ### Released ${DATE}
@@ -39,6 +49,8 @@ cat > "changelog/${TAG}.md" <<EOF
 
 [${TAG}]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/${TAG}
 EOF
+sed -i.bak "/^All notable changes/r ${CHANGELOG_SECTION}" CHANGELOG.md
+rm -f "${CHANGELOG_SECTION}"
 
 # --- Update version.txt ---
 
