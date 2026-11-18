@@ -8,7 +8,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- TODO: fill in changelog
+- chore: upgrade to OpenTelemetry Java SDK v2.32.0
+- chore: update open telemetry collector to v0.163.0
 
 [java-v2.21.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.21.0
 
