@@ -1,5 +1,9 @@
 name: Release Finalize
 
+# Manual recovery only. release-build-<language>.yml creates the release branch
+# after it publishes the layers. Use this workflow to create the branch when
+# that job failed or for an old release. It reads the layer ARNs from the
+# GitHub release of the tag.
 on:
   workflow_dispatch:
     inputs:
@@ -60,13 +64,16 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Update language README title
+      - name: Update language README
         if: steps.branch.outputs.exists != 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.parse.outputs.tag }}
           LANGUAGE: ${{ steps.parse.outputs.language }}
           VERSION: ${{ steps.parse.outputs.version }}
-        run: ./ci/release-finalize.sh
+        run: |
+          gh release view "${TAG}" --json body --jq .body > layer-arns.txt
+          ARNS_FILE=layer-arns.txt ./ci/release-finalize.sh
 
       - name: Push release branch
         if: steps.branch.outputs.exists != 'true'

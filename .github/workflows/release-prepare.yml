@@ -62,10 +62,21 @@ jobs:
             exit 1
           fi
 
+      # Events made with GITHUB_TOKEN do not start other workflows. When the
+      # app token pushes the branch and opens the PR, the PR checks start
+      # without manual approval.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Verify upstream release tag exists
         run: |
@@ -111,7 +122,7 @@ jobs:
       - name: Commit changes
         run: |
           git add \
-            "changelog/${LANGUAGE}-v${VERSION}.md" \
+            CHANGELOG.md \
             "${LANGUAGE}/version.txt" \
             "${LANGUAGE}/layer-data.sh" \
             "${LANGUAGE}/sample-apps/template.yaml" \
@@ -126,7 +137,7 @@ jobs:
 
       - name: Ensure release label exists
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh label create release \
             --color "0075ca" \
@@ -135,7 +146,7 @@ jobs:
 
       - name: Create pull request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           UPSTREAM_REPO="https://github.com/open-telemetry/opentelemetry-lambda"
           gh pr create \
@@ -156,11 +167,11 @@ jobs:
           - \`${LANGUAGE}/README.md\` — updates the release version in the title
           - \`README.md\` — updates the latest layer link and component versions detected from the pinned submodule
           - \`opentelemetry-lambda\` — pins the selected upstream release tag and commit
-          - \`changelog/${LANGUAGE}-v${VERSION}.md\` — adds the release changelog fragment
+          - \`CHANGELOG.md\` — adds the release section
 
           ### Pre-merge checklist
 
-          - [ ] Replace the TODO in \`changelog/${LANGUAGE}-v${VERSION}.md\` with the release changes
+          - [ ] Replace the TODO in the \`${LANGUAGE}-v${VERSION}\` section of \`CHANGELOG.md\` with the release changes
           - [ ] Verify \`${LANGUAGE}/version.txt\` metadata
           - [ ] Verify \`${LANGUAGE}/layer-data.sh\` and \`${LANGUAGE}/sample-apps/template.yaml\`
           - [ ] Verify the version in the title of \`${LANGUAGE}/README.md\`
@@ -170,10 +181,10 @@ jobs:
 
           ### What happens automatically after merge
 
-          1. **Changelog assembled** — the fragment is inserted into \`CHANGELOG.md\` and deleted
-          2. **Tag created** — \`${LANGUAGE}-v${VERSION}\` is created from the assembled changelog commit
-          3. **Release build dispatched** — the matching language build workflow is started at the new tag
-          4. **Pre-release created** — artifacts are built, Lambda layers are published, and a GitHub pre-release is created
+          1. **Tag created** — \`${LANGUAGE}-v${VERSION}\` is pushed at the merge commit. Nothing is pushed to \`main\`.
+          2. **Release build started** — the tag push triggers \`release-build-${LANGUAGE}.yml\`
+          3. **Pre-release created** — artifacts are built, Lambda layers are published, and a GitHub pre-release is created with the changelog section as its body
+          4. **Release branch created** — \`release-${LANGUAGE}-v${VERSION}\` gets the title, ARN tables and container links in \`${LANGUAGE}/README.md\`
           5. **Manual promotion** — review and promote the pre-release from the GitHub Releases page
           BODY
           )" \
