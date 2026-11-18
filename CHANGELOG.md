@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [java-v2.21.0]
+
+### Released 2026-11-18
+
+### Changed
+
+- TODO: fill in changelog
+
+[java-v2.21.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.21.0
+
 ## [python-v1.45.1]
 
 ### Released 2026-11-18
