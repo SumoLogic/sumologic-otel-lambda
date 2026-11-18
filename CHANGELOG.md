@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [nodejs-v2.2.0]
+
+### Released 2026-11-18
+
+### Changed
+
+- chore: upgrade to OpenTelemetry JavaScript SDK v2.12.0
+- chore: update open telemetry collector to v0.163.0
+
+[nodejs-v2.2.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.2.0
+
 ## [python-v1.45.1]
 
 ### Released 2026-11-18

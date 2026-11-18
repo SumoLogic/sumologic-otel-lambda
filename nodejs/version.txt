@@ -1,2 +1,2 @@
-current_version=2.1.0
-upstream_release_tag=layer-nodejs/0.23.0
+current_version=2.2.0
+upstream_release_tag=layer-nodejs/0.24.0
