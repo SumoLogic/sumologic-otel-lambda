@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [python-v1.45.1]
+
+### Released 2026-11-18
+
+### Changed
+
+- Updated OpenTelemetry Python SDK from 1.41.0 to 1.45.1
+- Updated Instrumentation from v0.62b0 to v0.66b1
+- Updated OpenTelemetry Collector from v0.151.0 to v0.163.0
+
+[python-v1.45.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.45.1
+
 ## [java-v2.20.0]
 
 ### Released 2026-09-21

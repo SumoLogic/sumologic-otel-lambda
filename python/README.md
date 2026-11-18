@@ -1,4 +1,4 @@
-# Sumo Logic Distribution for OpenTelemetry Python Lambda Layer v1.41.0
+# Sumo Logic Distribution for OpenTelemetry Python Lambda Layer v1.45.1
 
 Sumo Logic lambda layers support:
 
