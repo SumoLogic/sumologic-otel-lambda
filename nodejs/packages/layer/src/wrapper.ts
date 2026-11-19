@@ -1,3 +1,19 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 const {
   NodeTracerConfig,
   NodeTracerProvider,
@@ -14,7 +30,7 @@ const {
 } = require("@opentelemetry/instrumentation");
 const { awsLambdaDetector } = require("@opentelemetry/resource-detector-aws");
 const {
-  detectResourcesSync,
+  detectResources,
   envDetector,
   processDetector,
 } = require("@opentelemetry/resources");
@@ -25,10 +41,10 @@ const {
   AwsLambdaInstrumentation,
 } = require("@opentelemetry/instrumentation-aws-lambda");
 const { diag, DiagConsoleLogger, DiagLogLevel } = require("@opentelemetry/api");
-const { getEnv } = require("@opentelemetry/core");
+const { getStringFromEnv, diagLogLevelFromString } = require("@opentelemetry/core");
 const {
   OTLPTraceExporter,
-} = require("@opentelemetry/exporter-trace-otlp-proto");
+} = require("@opentelemetry/exporter-trace-otlp-http");
 const {
   MeterProvider,
   MeterProviderOptions,
@@ -85,7 +101,6 @@ function defaultConfigureInstrumentations() {
   ];
 }
 
-global.configureTracerProvider = function (tracerProvider) {};
 global.configureTracer = function (defaultConfig) {
   return defaultConfig;
 };
@@ -100,9 +115,67 @@ global.configureInstrumentations = function () {
   return [];
 };
 
+// Environment-based exporter configuration (OTel 2.0 pattern)
+function getExportersFromEnv() {
+  if (
+    process.env.OTEL_TRACES_EXPORTER == null ||
+    process.env.OTEL_TRACES_EXPORTER.trim() === ''
+  ) {
+    return [new OTLPTraceExporter()];
+  }
+  if (process.env.OTEL_TRACES_EXPORTER.includes('none')) {
+    return null;
+  }
+
+  const stringToExporter = new Map([
+    ['otlp', () => new OTLPTraceExporter()],
+    ['console', () => new ConsoleSpanExporter()],
+  ]);
+  const exporters: any[] = [];
+  process.env.OTEL_TRACES_EXPORTER.split(',').map((exporterName: string) => {
+    exporterName = exporterName.toLowerCase().trim();
+    const exporter = stringToExporter.get(exporterName);
+    if (exporter) {
+      const createdExporter = exporter();
+      exporters.push(createdExporter);
+    } else {
+      console.warn(
+        `Invalid exporter "${exporterName}" specified in the environment variable OTEL_TRACES_EXPORTER`,
+      );
+    }
+  });
+  
+  if (exporters.length === 0) {
+    return [new OTLPTraceExporter()];
+  }
+  
+  return exporters;
+}
+
 // configure lambda logging
-const logLevel = getEnv().OTEL_LOG_LEVEL;
+const logLevel = diagLogLevelFromString(getStringFromEnv('OTEL_LOG_LEVEL'));
 diag.setLogger(new DiagConsoleLogger(), logLevel);
+
+// Configure suppressInternalInstrumentation for AwsInstrumentation
+let suppressInternalInstrumentation = true;
+const sumoOtelSuppressAwsInstrumentationVal =
+  process.env.SUMO_OTEL_SUPPRESS_AWS_INSTRUMENTATION;
+if (
+  sumoOtelSuppressAwsInstrumentationVal === "false" ||
+  sumoOtelSuppressAwsInstrumentationVal === "False"
+) {
+  suppressInternalInstrumentation = false;
+}
+
+// Map vendor-specific endpoint to OTel variable before exporter creation
+// Keep using localhost collector but ensure proper endpoint mapping
+if (process.env.SUMO_OTLP_HTTP_ENDPOINT_URL && !process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
+  // Use localhost collector as intended, but log the Sumo endpoint for collector to use
+  process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://localhost:4318/v1/traces";
+} else if (!process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) {
+  // Default fallback to localhost collector
+  process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "http://localhost:4318/v1/traces";
+}
 
 console.log("Registering OpenTelemetry");
 
@@ -131,25 +204,32 @@ if (logLevel === DiagLogLevel.DEBUG) {
   console.log("OTEL_SERVICE_NAME value", process.env.OTEL_SERVICE_NAME);
   console.log("OTEL_TRACES_SAMPLER value", process.env.OTEL_TRACES_SAMPLER);
   console.log(
-    "SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL value",
-    process.env.SUMOLOGIC_HTTP_TRACES_ENDPOINT_URL
-  );
-  console.log(
     "SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION value",
     process.env.SUMO_OTEL_DISABLE_AWS_CONTEXT_PROPAGATION
   );
+  console.log(
+    "SUMO_OTEL_SUPPRESS_AWS_INSTRUMENTATION value",
+    process.env.SUMO_OTEL_SUPPRESS_AWS_INSTRUMENTATION
+  );
 }
+
+// Get user-configured instrumentations (if any)
+const userInstrumentations = typeof global.configureInstrumentations === "function"
+  ? global.configureInstrumentations()
+  : [];
+
+// Always include default instrumentations (HttpInstrumentation, etc.)
+const defaultInstruments = defaultConfigureInstrumentations();
 
 const instrumentations = [
   new AwsInstrumentation({
-    suppressInternalInstrumentation: true,
+    suppressInternalInstrumentation: suppressInternalInstrumentation,
   }),
   new AwsLambdaInstrumentation({
     disableAwsContextPropagation: disableAwsContextPropagation,
   }),
-  ...(typeof configureInstrumentations === "function"
-    ? configureInstrumentations
-    : defaultConfigureInstrumentations)(),
+  ...defaultInstruments,
+  ...userInstrumentations,
 ];
 
 // Register instrumentations synchronously to ensure code is patched even before provider is ready.
@@ -157,39 +237,67 @@ registerInstrumentations({
   instrumentations,
 });
 
-async function initializeProvider() {
-  const resource = detectResourcesSync({
-    detectors: [awsLambdaDetector, envDetector, processDetector],
-  });
-
+async function initializeTracerProvider(resource: any) {
   let config = {
     resource,
+    spanProcessors: [] as any[],
   };
+
+  const exporters = getExportersFromEnv();
+  if (!exporters) {
+    return undefined;
+  }
+
   if (typeof configureTracer === "function") {
     config = configureTracer(config);
   }
 
-  const tracerProvider = new NodeTracerProvider(config);
-  if (typeof configureTracerProvider === "function") {
-    configureTracerProvider(tracerProvider);
-  } else {
-    // defaults
-    tracerProvider.addSpanProcessor(
-      new BatchSpanProcessor(new OTLPTraceExporter())
-    );
+  // Configure span processors based on exporters
+  if (exporters.length) {
+    config.spanProcessors = [];
+    exporters.forEach((exporter: any) => {
+      if (exporter instanceof ConsoleSpanExporter) {
+        config.spanProcessors.push(new SimpleSpanProcessor(exporter));
+      } else {
+        config.spanProcessors.push(new BatchSpanProcessor(exporter));
+      }
+    });
   }
-  // logging for debug
+
+  config.spanProcessors = config.spanProcessors || [];
+  if (config.spanProcessors.length === 0) {
+    // Default
+    config.spanProcessors.push(new BatchSpanProcessor(new OTLPTraceExporter()));
+  }
+
+  // Logging for debug
   if (logLevel === DiagLogLevel.DEBUG) {
-    tracerProvider.addSpanProcessor(
+    config.spanProcessors.push(
       new SimpleSpanProcessor(new ConsoleSpanExporter())
     );
   }
+
+  const tracerProvider = new NodeTracerProvider(config);
 
   let sdkRegistrationConfig = {};
   if (typeof configureSdkRegistration === "function") {
     sdkRegistrationConfig = configureSdkRegistration(sdkRegistrationConfig);
   }
   tracerProvider.register(sdkRegistrationConfig);
+
+  return tracerProvider;
+}
+
+async function initializeProvider() {
+  const resource = await detectResources({
+    detectors: [awsLambdaDetector, envDetector, processDetector],
+  });
+
+  const tracerProvider = await initializeTracerProvider(resource);
+  
+  if (!tracerProvider) {
+    return;
+  }
 
   // Configure default meter provider (do not export metrics)
   let meterConfig = {

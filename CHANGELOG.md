@@ -2,6 +2,158 @@
 
 All notable changes to this project will be documented in this file.
 
+## [java-v2.21.0]
+
+### Released 2026-11-18
+
+### Changed
+
+- chore: upgrade to OpenTelemetry Java SDK v2.32.0
+- chore: update open telemetry collector to v0.163.0
+
+[java-v2.21.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.21.0
+
+## [nodejs-v2.2.0]
+
+### Released 2026-11-18
+
+### Changed
+
+- chore: upgrade to OpenTelemetry JavaScript SDK v2.12.0
+- chore: update open telemetry collector to v0.163.0
+
+[nodejs-v2.2.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.2.0
+
+## [python-v1.45.1]
+
+### Released 2026-11-18
+
+### Changed
+
+- Updated OpenTelemetry Python SDK from 1.41.0 to 1.45.1
+- Updated Instrumentation from v0.62b0 to v0.66b1
+- Updated OpenTelemetry Collector from v0.151.0 to v0.163.0
+
+[python-v1.45.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.45.1
+
+## [java-v2.20.0]
+
+### Released 2026-09-21
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[java-v2.20.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.20.0
+
+## [nodejs-v2.1.0]
+
+### Released 2026-09-16
+
+### Changed
+
+- chore: upgrade to OpenTelemetry JavaScript SDK 2.10.0
+- chore: update open telemetry collector to 0.157.0
+
+- [nodejs-v2.1.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.1.0
+
+## [python-v1.41.0]
+
+### Released 2026-07-22
+
+- Updated OpenTelemetry Python SDK from 1.40.0 to 1.41.0
+- Updated Instrumentation from v0.610 to v0.62b0
+- Updated OpenTelemetry Collector from v0.148.0 to v0.151.0
+
+[python-v1.41.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.41.0
+
+## [python-v1.40.0]
+
+### Released 2026-04-09
+
+### Changed
+
+- Updated OpenTelemetry Python SDK from 1.38.0 to 1.40.0
+- Updated Instrumentation from v0.59b0 to v0.61b0
+- Updated OpenTelemetry Collector from v0.138.0 to v0.148.0
+
+[python-v1.40.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.40.0
+
+## [nodejs-v2.0.2]
+
+### Released 2026-02-18
+
+- fix: add missing dependency `require-in-the-middle` to nodejs lambda layer [#63]"
+
+[#63]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/63
+
+## [nodejs-v2.0.1]
+
+### Released 2026-02-09
+
+### Changed
+
+- feat: add environment variable for suppressInternalInstrumentation [#58]
+- fix: fix defaultInstrumentation never being registered bug [#59]
+
+[#58]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/58
+[#59]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/59
+[nodejs-v2.0.1]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.0.1
+
+## [python-v1.38.0]
+
+### Released 2025-11-05
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[python-v1.38.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.38.0
+
+## [java-v2.19.0]
+
+### Released 2025-10-15
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[java-v2.19.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.19.0
+
+## [nodejs-v2.0.0]
+
+### Released 2025-09-02
+
+### Changed
+
+- feat: upgrade to OpenTelemetry JavaScript SDK 2.0.0 [#50]
+- feat: update nodejs lambda layer compatible runtimes to 18.x, 20.x, 22.x (removed 16.x) [#50]
+- feat: improve type safety and error handling in wrapper initialization [#50]
+- chore: update all OpenTelemetry dependencies to latest stable versions [#50]
+
+[#50]: https://github.com/SumoLogic/sumologic-otel-lambda/pull/50
+[nodejs-v2.0.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/nodejs-v2.0.0
+
+## [java-v2.15.0]
+
+### Released 2025-06-09
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[java-v2.15.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/java-v2.15.0
+
+## [python-v1.32.0]
+
+### Released 2025-06-06
+
+### Changed
+
+- Update collector and instrumentation to latest upstream version
+
+[python-v1.32.0]: https://github.com/SumoLogic/sumologic-otel-lambda/releases/tag/python-v1.32.0
+
 ## [nodejs-v1.17.2]
 
 ### Released 2024-07-24

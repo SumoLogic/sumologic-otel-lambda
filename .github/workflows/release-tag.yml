@@ -1,0 +1,94 @@
+name: Release Tag
+
+# The pull_request trigger cannot filter on the head branch, so this workflow
+# starts for every PR closed against main. The job condition limits it to merged
+# release PRs: the head branch must start with prepare-<language>-v and the PR
+# must have the `release` label that release-prepare.yml adds.
+#
+# This workflow pushes only the tag. It does not push to main, so the branch
+# protection rules on main do not apply. The changelog is already in
+# CHANGELOG.md, because the prepare PR changes it.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-tag-main
+  cancel-in-progress: false
+
+jobs:
+  create-tag:
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'release') &&
+      (startsWith(
+        github.event.pull_request.head.ref,
+        'prepare-java-v') ||
+      startsWith(
+        github.event.pull_request.head.ref,
+        'prepare-nodejs-v') ||
+      startsWith(
+        github.event.pull_request.head.ref,
+        'prepare-python-v'))
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Extract release details
+        id: parse
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          TAG="${BRANCH#prepare-}"
+          if ! [[ "${TAG}" =~ ^(java|nodejs|python)-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Unexpected release branch: ${BRANCH}"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      # Tag pushes made with GITHUB_TOKEN do not start other workflows. A tag
+      # pushed with the app token starts release-build-<language>.yml.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check release state
+        id: state
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+        run: |
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists; skipping release"
+            echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! grep -qxF "## [${TAG}]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no section for ${TAG}"
+            exit 1
+          fi
+          echo "tag_exists=false" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        if: steps.state.outputs.tag_exists != 'true'
+        env:
+          TAG: ${{ steps.parse.outputs.tag }}
+        run: |
+          git tag -m "${TAG}" "${TAG}"
+          git push origin "refs/tags/${TAG}"

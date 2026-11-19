@@ -1,0 +1,2 @@
+current_version=1.45.1
+upstream_release_tag=layer-python/0.22.0

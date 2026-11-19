@@ -11,7 +11,7 @@ resource "aws_ecs_task_definition" "aws-ecs-task" {
   container_definitions = jsonencode([
     {
       name      = "${var.app_name}-container"
-      image     = "public.ecr.aws/sumologic/kubernetes-tools:2.19.0"
+      image     = "public.ecr.aws/sumologic/kubernetes-tools:2.24.0"
       cpu       = 1024
       memory    = 2048
       essential = true
