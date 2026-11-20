@@ -38,7 +38,7 @@ jobs:
           run_hash="$(printf '%s' '${{ github.run_id }}' | sha256sum | cut -c1-8)"
           echo "TF_VAR_app_name=ll-${{ inputs.LANGUAGE }}-${run_hash}" >> "$GITHUB_ENV"
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4.0.1
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         env:
           AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
         with:
@@ -105,7 +105,7 @@ jobs:
             echo "FUNCTION_PACKAGE=~/artifact/python-sample-app.zip" >> "$GITHUB_ENV"
           fi
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4.0.1
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         env:
           AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
         with:
@@ -198,7 +198,7 @@ jobs:
           run_hash="$(printf '%s' '${{ github.run_id }}' | sha256sum | cut -c1-8)"
           echo "TF_VAR_app_name=ll-${{ inputs.LANGUAGE }}-${run_hash}" >> "$GITHUB_ENV"
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4.0.1
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         env:
           AWS_OPENID_ROLE_ARN: arn:aws:iam::663229565520:role/osc-team-sumo-opentelemetry-lambda-openid-connect
         with:
